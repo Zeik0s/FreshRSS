@@ -28,5 +28,5 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       -
         name: Push to Registry
-        run: docker push ghcr.io/Zeik0s/FreshRSS:arm64
+        run: docker push ghcr.io/Zeik0s/freshrss:arm64
         
