@@ -1018,7 +1018,7 @@ function init_stream(stream) {
 			return true;
 		}
 
-		el = ev.target.closest('.item.share > a[data-type="print"]');
+		el = ev.target.closest('.item.share > button[data-type="print"]');
 		if (el) {	// Print
 			const tmp_window = window.open();
 			for (let i = 0; i < document.styleSheets.length; i++) {
@@ -1032,9 +1032,19 @@ function init_stream(stream) {
 			return false;
 		}
 
-		el = ev.target.closest('.item.share > a[data-type="clipboard"]');
+		el = ev.target.closest('.item.share > button[data-type="clipboard"]');
 		if (el && navigator.clipboard) {	// Clipboard
-			navigator.clipboard.writeText(el.href);
+			navigator.clipboard.writeText(el.dataset.url);
+			return false;
+		}
+
+		el = ev.target.closest('.item.share > button[data-type="web-sharing-api"]');
+		if (el && navigator.share) {	// https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share
+			const shareData = {
+				url: el.dataset.url,
+				title: decodeURI(el.dataset.title),
+			};
+			navigator.share(shareData);
 			return false;
 		}
 
@@ -1067,6 +1077,15 @@ function init_stream(stream) {
 			return false;
 		}
 	};
+
+	if (!navigator.share) {
+		// https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share
+		// do not show the menu entry if browser does not support navigator.share
+		document.styleSheets[0].insertRule(
+			'button.as-link[data-type="web-sharing-api"] {display: none !important;}',
+			document.styleSheets[0].cssRules.length
+		);
+	}
 
 	stream.onmouseup = function (ev) {	// Mouseup enables us to catch middle click, and control+click in IE/Edge
 		if (ev.altKey || ev.metaKey || ev.shiftKey) {
@@ -1369,6 +1388,69 @@ function init_notifications() {
 	}
 }
 // </notification>
+
+// <slider>
+function init_slider_observers() {
+	const slider = document.getElementById('slider');
+	const closer = document.getElementById('close-slider');
+	if (!slider) {
+		return;
+	}
+
+	window.onclick = open_slider_listener;
+
+	closer.addEventListener('click', function (ev) {
+		if (slider_data_leave_validation() || confirm(context.i18n.confirmation_default)) {
+			slider.querySelectorAll('form').forEach(function (f) { f.reset(); });
+			closer.classList.remove('active');
+			slider.classList.remove('active');
+			return true;
+		} else {
+			return false;
+		}
+	});
+}
+
+function open_slider_listener(ev) {
+	const a = ev.target.closest('.open-slider');
+	if (a) {
+		if (!context.ajax_loading) {
+			location.href = '#'; // close menu/dropdown
+			context.ajax_loading = true;
+
+			const req = new XMLHttpRequest();
+			req.open('GET', a.href + '&ajax=1', true);
+			req.responseType = 'document';
+			req.onload = function (e) {
+				const slider = document.getElementById('slider');
+				const closer = document.getElementById('close-slider');
+				slider.innerHTML = this.response.body.innerHTML;
+				slider.classList.add('active');
+				closer.classList.add('active');
+				context.ajax_loading = false;
+			};
+			req.send();
+			return false;
+		}
+	}
+}
+
+function slider_data_leave_validation() {
+	const ds = document.querySelectorAll('[data-leave-validation]');
+
+	for (let i = ds.length - 1; i >= 0; i--) {
+		const input = ds[i];
+		if (input.type === 'checkbox' || input.type === 'radio') {
+			if (input.checked != input.getAttribute('data-leave-validation')) {
+				return false;
+			}
+		} else if (input.value != input.getAttribute('data-leave-validation')) {
+			return false;
+		}
+	}
+	return true;
+}
+// </slider>
 
 // <popup>
 let popup = null;
@@ -1734,6 +1816,7 @@ function init_beforeDOM() {
 function init_afterDOM() {
 	removeFirstLoadSpinner();
 	init_notifications();
+	init_slider_observers();
 	init_popup();
 	init_confirm_action();
 	const stream = document.getElementById('stream');
