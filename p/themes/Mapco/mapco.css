@@ -906,7 +906,6 @@ main.prompt {
 }
 .content h1.title a, .content h1 a, .content.thin h1.title a, .content.thin h1 a {
 	color: #303136;
-	font-family: "spectral", serif;
 	font-size: 2rem;
 }
 .content h1.title a:hover, .content h1 a:hover, .content.thin h1.title a:hover, .content.thin h1 a:hover {
