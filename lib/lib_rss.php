@@ -332,7 +332,8 @@ function sanitizeHTML($data, string $base = '', $maxLength = false) {
 }
 
 function cleanCache(int $hours = 720) {
-	$files = glob(CACHE_PATH . '/*.{html,spc}', GLOB_BRACE | GLOB_NOSORT);
+	// N.B.: GLOB_BRACE is not available on all platforms
+	$files = array_merge(glob(CACHE_PATH . '/*.html', GLOB_NOSORT), glob(CACHE_PATH . '/*.spc', GLOB_NOSORT));
 	foreach ($files as $file) {
 		if (substr($file, -10) === 'index.html') {
 			continue;
@@ -351,7 +352,7 @@ function cleanCache(int $hours = 720) {
  * @return string an HTML string with XML encoding information for DOMDocument::loadHTML()
  */
 function enforceHttpEncoding(string $html, string $contentType = ''): string {
-	$httpCharset = preg_match('/\bcharset=([0-9a-z_-]{2,12})$/i', $contentType, $matches) === false ? '' : $matches[1];
+	$httpCharset = preg_match('/\bcharset=([0-9a-z_-]{2,12})$/i', $contentType, $matches) === 1 ? $matches[1] : '';
 	if ($httpCharset == '') {
 		// No charset defined by HTTP, do nothing
 		return $html;
@@ -695,13 +696,13 @@ function check_install_php() {
 function check_install_files() {
 	return array(
 		// @phpstan-ignore-next-line
-		'data' => DATA_PATH && is_writable(DATA_PATH),
+		'data' => DATA_PATH && touch(DATA_PATH . '/index.html'),	// is_writable() is not reliable for a folder on NFS
 		// @phpstan-ignore-next-line
-		'cache' => CACHE_PATH && is_writable(CACHE_PATH),
+		'cache' => CACHE_PATH && touch(CACHE_PATH . '/index.html'),
 		// @phpstan-ignore-next-line
-		'users' => USERS_PATH && is_writable(USERS_PATH),
-		'favicons' => is_writable(DATA_PATH . '/favicons'),
-		'tokens' => is_writable(DATA_PATH . '/tokens'),
+		'users' => USERS_PATH && touch(USERS_PATH . '/index.html'),
+		'favicons' => touch(DATA_PATH . '/favicons/index.html'),
+		'tokens' => touch(DATA_PATH . '/tokens/index.html'),
 	);
 }
 
