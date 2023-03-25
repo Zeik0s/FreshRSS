@@ -1,6 +1,6 @@
 <?php
 
-class FreshRSS_TagDAO extends Minz_ModelPdo implements FreshRSS_Searchable {
+class FreshRSS_TagDAO extends Minz_ModelPdo {
 
 	public function sqlIgnore(): string {
 		return 'IGNORE';
@@ -197,10 +197,7 @@ SQL;
 		}
 	}
 
-	/**
-	 * @return FreshRSS_Tag|null
-	 */
-	public function searchById($id) {
+	public function searchById(int $id): ?FreshRSS_Tag {
 		$sql = 'SELECT * FROM `_tag` WHERE id=?';
 		$stm = $this->pdo->prepare($sql);
 		$values = array($id);
@@ -267,12 +264,13 @@ SQL;
 		return $newestItemUsec;
 	}
 
+	/** @return int|false */
 	public function count() {
 		$sql = 'SELECT COUNT(*) AS count FROM `_tag`';
 		$stm = $this->pdo->query($sql);
 		if ($stm !== false) {
 			$res = $stm->fetchAll(PDO::FETCH_ASSOC);
-			return $res[0]['count'];
+			return (int)$res[0]['count'];
 		} else {
 			$info = $this->pdo->errorInfo();
 			if ($this->autoUpdateDb($info)) {
@@ -283,16 +281,27 @@ SQL;
 		}
 	}
 
-	public function countEntries($id) {
+	/**
+	 * @return int|false
+	 */
+	public function countEntries(int $id) {
 		$sql = 'SELECT COUNT(*) AS count FROM `_entrytag` WHERE id_tag=?';
-		$stm = $this->pdo->prepare($sql);
 		$values = array($id);
-		$stm->execute($values);
-		$res = $stm->fetchAll(PDO::FETCH_ASSOC);
-		return $res[0]['count'];
+		if (($stm = $this->pdo->prepare($sql)) !== false &&
+			$stm->execute($values) &&
+			($res = $stm->fetchAll(PDO::FETCH_ASSOC)) !== false) {
+			return (int)$res[0]['count'];
+		} else {
+			$info = is_object($stm) ? $stm->errorInfo() : $this->pdo->errorInfo();
+			Minz_Log::error('SQL error ' . __METHOD__ . json_encode($info));
+			return false;
+		}
 	}
 
-	public function countNotRead($id = null) {
+	/**
+	 * @return int|false
+	 */
+	public function countNotRead(?int $id = null) {
 		$sql = 'SELECT COUNT(*) AS count FROM `_entrytag` et '
 			 . 'INNER JOIN `_entry` e ON et.id_entry=e.id '
 			 . 'WHERE e.is_read=0';
@@ -303,11 +312,15 @@ SQL;
 			$values = [$id];
 		}
 
-		$stm = $this->pdo->prepare($sql);
-
-		$stm->execute($values);
-		$res = $stm->fetchAll(PDO::FETCH_ASSOC);
-		return $res[0]['count'];
+		if (($stm = $this->pdo->prepare($sql)) !== false &&
+			$stm->execute($values) &&
+			($res = $stm->fetchAll(PDO::FETCH_ASSOC)) !== false) {
+			return (int)$res[0]['count'];
+		} else {
+			$info = is_object($stm) ? $stm->errorInfo() : $this->pdo->errorInfo();
+			Minz_Log::error('SQL error ' . __METHOD__ . json_encode($info));
+			return false;
+		}
 	}
 
 	public function tagEntry($id_tag, $id_entry, $checked = true) {

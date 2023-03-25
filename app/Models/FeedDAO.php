@@ -1,6 +1,6 @@
 <?php
 
-class FreshRSS_FeedDAO extends Minz_ModelPdo implements FreshRSS_Searchable {
+class FreshRSS_FeedDAO extends Minz_ModelPdo {
 
 	protected function addColumn(string $name) {
 		if ($this->pdo->inTransaction()) {
@@ -49,11 +49,11 @@ class FreshRSS_FeedDAO extends Minz_ModelPdo implements FreshRSS_Searchable {
 		}
 
 		$values = array(
-			substr($valuesTmp['url'], 0, 511),
+			$valuesTmp['url'],
 			$valuesTmp['kind'] ?? FreshRSS_Feed::KIND_RSS,
 			$valuesTmp['category'],
 			mb_strcut(trim($valuesTmp['name']), 0, FreshRSS_DatabaseDAO::LENGTH_INDEX_UNICODE, 'UTF-8'),
-			substr($valuesTmp['website'], 0, 255),
+			$valuesTmp['website'],
 			sanitizeHTML($valuesTmp['description'], '', 1023),
 			$valuesTmp['lastUpdate'],
 			isset($valuesTmp['priority']) ? intval($valuesTmp['priority']) : FreshRSS_Feed::PRIORITY_MAIN_STREAM,
@@ -284,10 +284,7 @@ SQL;
 		}
 	}
 
-	/**
-	 * @return FreshRSS_Feed|null
-	 */
-	public function searchById($id) {
+	public function searchById(int $id): ?FreshRSS_Feed {
 		$sql = 'SELECT * FROM `_feed` WHERE id=:id';
 		$stm = $this->pdo->prepare($sql);
 		$stm->bindParam(':id', $id, PDO::PARAM_INT);
@@ -434,7 +431,7 @@ SQL;
 			. '`cache_nbUnreads`=(SELECT COUNT(e2.id) FROM `_entry` e2 WHERE e2.id_feed=`_feed`.id AND e2.is_read=0)'
 			. ($id != 0 ? ' WHERE id=:id' : '');
 		$stm = $this->pdo->prepare($sql);
-		if ($id != 0) {
+		if ($stm && $id != 0) {
 			$stm->bindParam(':id', $id, PDO::PARAM_INT);
 		}
 
