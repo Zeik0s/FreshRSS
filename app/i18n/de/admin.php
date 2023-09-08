@@ -147,7 +147,7 @@ return array(
 		'main_stream' => 'Haupt-Feeds',
 		'no_idle' => 'Es gibt keinen inaktiven Feed!',
 		'number_entries' => '%d Artikel',
-		'percent_of_total' => '%% Gesamt',
+		'percent_of_total' => '% Gesamt',
 		'repartition' => 'Artikel-Verteilung',
 		'status_favorites' => 'Favoriten',
 		'status_read' => 'Gelesen',
@@ -192,11 +192,20 @@ return array(
 	'update' => array(
 		'_' => 'System aktualisieren',
 		'apply' => 'Anwenden',
+		'changelog' => 'Liste der Änderungen',
 		'check' => 'Auf neue Aktualisierungen prüfen',
+		'copiedFromURL' => 'update.php wurde von %s nach ./data kopiert',
 		'current_version' => 'Ihre aktuelle Version von FreshRSS ist %s.',
 		'last' => 'Letzte Überprüfung: %s',
+		'loading' => 'Aktualisierung läuft…',
 		'none' => 'Keine ausstehende Aktualisierung',
+		'releaseChannel' => array(
+			'_' => 'Veröffentlichungskanal',
+			'edge' => 'Aktueller Entwicklungsstand (“edge”)',
+			'latest' => 'Stabile Version (“latest”)',
+		),
 		'title' => 'System aktualisieren',
+		'viaGit' => 'Update über git und Github.com gestartet',
 	),
 	'user' => array(
 		'admin' => 'Administrator',	// IGNORE

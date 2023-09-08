@@ -30,10 +30,10 @@ class FreshRSS_category_Controller extends FreshRSS_ActionController {
 		$catDAO = FreshRSS_Factory::createCategoryDao();
 		$tagDAO = FreshRSS_Factory::createTagDao();
 
-		$url_redirect = array('c' => 'subscription', 'a' => 'add');
+		$url_redirect = ['c' => 'subscription', 'a' => 'add'];
 
 		$limits = FreshRSS_Context::$system_conf->limits;
-		$this->view->categories = $catDAO->listCategories(false);
+		$this->view->categories = $catDAO->listCategories(false) ?: [];
 
 		if (count($this->view->categories) >= $limits['max_categories']) {
 			Minz_Request::bad(_t('feedback.sub.category.over_max', $limits['max_categories']), $url_redirect);
@@ -42,8 +42,8 @@ class FreshRSS_category_Controller extends FreshRSS_ActionController {
 		if (Minz_Request::isPost()) {
 			invalidateHttpCache();
 
-			$cat_name = trim(Minz_Request::param('new-category', ''));
-			if ($cat_name == '') {
+			$cat_name = Minz_Request::paramString('new-category');
+			if ($cat_name === '') {
 				Minz_Request::bad(_t('feedback.sub.category.no_name'), $url_redirect);
 			}
 
@@ -57,7 +57,7 @@ class FreshRSS_category_Controller extends FreshRSS_ActionController {
 				Minz_Request::bad(_t('feedback.tag.name_exists', $cat->name()), $url_redirect);
 			}
 
-			$opml_url = checkUrl(Minz_Request::param('opml_url', ''));
+			$opml_url = checkUrl(Minz_Request::paramString('opml_url'));
 			if ($opml_url != '') {
 				$cat->_kind(FreshRSS_Category::KIND_DYNAMIC_OPML);
 				$cat->_attributes('opml_url', $opml_url);
@@ -79,6 +79,8 @@ class FreshRSS_category_Controller extends FreshRSS_ActionController {
 
 	/**
 	 * This action updates the given category.
+	 * @todo Check whether this function is used at all
+	 * @see FreshRSS_subscription_Controller::categoryAction() (consider merging)
 	 *
 	 * Request parameters are:
 	 *   - id
@@ -86,25 +88,27 @@ class FreshRSS_category_Controller extends FreshRSS_ActionController {
 	 */
 	public function updateAction(): void {
 		$catDAO = FreshRSS_Factory::createCategoryDao();
-		$url_redirect = array('c' => 'subscription', 'a' => 'index');
+		$url_redirect = ['c' => 'subscription', 'a' => 'index'];
 
 		if (Minz_Request::isPost()) {
 			invalidateHttpCache();
 
-			$id = Minz_Request::param('id');
-			$name = Minz_Request::param('name', '');
+			$id = Minz_Request::paramInt('id');
+			$name = Minz_Request::paramString('name');
 			if (strlen($name) <= 0) {
 				Minz_Request::bad(_t('feedback.sub.category.no_name'), $url_redirect);
 			}
 
-			if ($catDAO->searchById($id) == null) {
+			$cat = $catDAO->searchById($id);
+			if ($cat === null) {
 				Minz_Request::bad(_t('feedback.sub.category.not_exist'), $url_redirect);
 			}
 
-			$cat = new FreshRSS_Category($name);
-			$values = array(
+			$values = [
 				'name' => $cat->name(),
-			);
+				'kind' => $cat->kind(),
+				'attributes' => $cat->attributes(),
+			];
 
 			if ($catDAO->updateCategory($id, $values)) {
 				Minz_Request::good(_t('feedback.sub.category.updated'), $url_redirect);
@@ -127,13 +131,13 @@ class FreshRSS_category_Controller extends FreshRSS_ActionController {
 	public function deleteAction(): void {
 		$feedDAO = FreshRSS_Factory::createFeedDao();
 		$catDAO = FreshRSS_Factory::createCategoryDao();
-		$url_redirect = array('c' => 'subscription', 'a' => 'index');
+		$url_redirect = ['c' => 'subscription', 'a' => 'index'];
 
 		if (Minz_Request::isPost()) {
 			invalidateHttpCache();
 
-			$id = Minz_Request::param('id');
-			if (!$id) {
+			$id = Minz_Request::paramInt('id');
+			if ($id === 0) {
 				Minz_Request::bad(_t('feedback.sub.category.no_id'), $url_redirect);
 			}
 
@@ -170,20 +174,17 @@ class FreshRSS_category_Controller extends FreshRSS_ActionController {
 	 */
 	public function emptyAction(): void {
 		$feedDAO = FreshRSS_Factory::createFeedDao();
-		$url_redirect = array('c' => 'subscription', 'a' => 'index');
+		$url_redirect = ['c' => 'subscription', 'a' => 'index'];
 
 		if (Minz_Request::isPost()) {
 			invalidateHttpCache();
 
-			$id = Minz_Request::param('id');
-			if (!$id) {
+			$id = Minz_Request::paramInt('id');
+			if ($id === 0) {
 				Minz_Request::bad(_t('feedback.sub.category.no_id'), $url_redirect);
 			}
 
-			$muted = Minz_Request::param('muted', null);
-			if ($muted !== null) {
-				$muted = (bool)$muted;
-			}
+			$muted = Minz_Request::paramTernary('muted');
 
 			// List feeds to remove then related user queries.
 			$feeds = $feedDAO->listByCategory($id, $muted);
@@ -213,13 +214,13 @@ class FreshRSS_category_Controller extends FreshRSS_ActionController {
 	 */
 	public function refreshOpmlAction(): void {
 		$catDAO = FreshRSS_Factory::createCategoryDao();
-		$url_redirect = array('c' => 'subscription', 'a' => 'index');
+		$url_redirect = ['c' => 'subscription', 'a' => 'index'];
 
 		if (Minz_Request::isPost()) {
 			invalidateHttpCache();
 
-			$id = Minz_Request::param('id');
-			if (!$id) {
+			$id = Minz_Request::paramInt('id');
+			if ($id === 0) {
 				Minz_Request::bad(_t('feedback.sub.category.no_id'), $url_redirect);
 			}
 
@@ -232,9 +233,9 @@ class FreshRSS_category_Controller extends FreshRSS_ActionController {
 
 			$ok = $category->refreshDynamicOpml();
 
-			if (Minz_Request::param('ajax')) {
+			if (Minz_Request::paramBoolean('ajax')) {
 				Minz_Request::setGoodNotification(_t('feedback.sub.category.updated'));
-				$this->view->_layout(false);
+				$this->view->_layout(null);
 			} else {
 				if ($ok) {
 					Minz_Request::good(_t('feedback.sub.category.updated'), $url_redirect);

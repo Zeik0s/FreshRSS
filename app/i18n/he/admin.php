@@ -147,7 +147,7 @@ return array(
 		'main_stream' => 'הזנה ראשית',
 		'no_idle' => 'אין הזנות מובטלות!',
 		'number_entries' => '%d מאמרים',
-		'percent_of_total' => '%% מסך הכל',
+		'percent_of_total' => '% מסך הכל',
 		'repartition' => 'חלוקת המאמרים',
 		'status_favorites' => 'מועדפים',
 		'status_read' => 'נקרא',
@@ -192,11 +192,20 @@ return array(
 	'update' => array(
 		'_' => 'מערכת העדכון',
 		'apply' => 'החלת העדכון',
+		'changelog' => 'Changelog',	// TODO
 		'check' => 'בדיקת עדכונים חדשים',
+		'copiedFromURL' => 'update.php copied from %s to ./data',	// TODO
 		'current_version' => 'Your current version of FreshRSS is the %s.',
 		'last' => 'תאריך בדיקה אחרון: %s',
+		'loading' => 'Updating…',	// TODO
 		'none' => 'אין עדכון להחלה',
+		'releaseChannel' => array(
+			'_' => 'Release channel',	// TODO
+			'edge' => 'Rolling release (“edge”)',	// TODO
+			'latest' => 'Stable release (“latest”)',	// TODO
+		),
 		'title' => 'מערכת העדכון',
+		'viaGit' => 'Update via git and Github.com started',	// TODO
 	),
 	'user' => array(
 		'admin' => 'Administrator',	// TODO

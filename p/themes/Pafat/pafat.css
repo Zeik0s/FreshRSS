@@ -230,17 +230,12 @@ form th {
 	font-size: 0.9rem;
 	border: 1px solid var(--border-color-grey-dark);
 	border-radius: 3px;
-	min-height: 29px;
+	min-height: 25px;
 	min-width: 15px;
 	line-height: 1.7;
 	vertical-align: middle;
 	cursor: pointer;
 	overflow: hidden;
-}
-
-a.btn {
-	min-height: 25px;
-	line-height: 1.7;
 }
 
 .read_all.btn {
@@ -1059,7 +1054,7 @@ a.signin {
 	}
 
 	.aside .toggle_aside,
-	#panel .close,
+	#overlay .close,
 	.dropdown-menu .toggle_aside {
 		background-color: var(--background-color-grey);
 		border-bottom: 1px solid var(--border-color-grey-light);
@@ -1109,5 +1104,9 @@ a.signin {
 	.post {
 		padding-left: 15px;
 		padding-right: 15px;
+	}
+
+	#overlay {
+		background-color: var(--background-color-grey);
 	}
 }

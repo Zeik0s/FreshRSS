@@ -231,10 +231,10 @@ final class GReaderAPI {
 	private static function token(?FreshRSS_UserConfiguration $conf) {
 		//http://blog.martindoms.com/2009/08/15/using-the-google-reader-api-part-1/
 		//https://github.com/ericmann/gReader-Library/blob/master/greader.class.php
-		if ($conf == null || FreshRSS_Context::$system_conf == null) {
+		$user = Minz_User::name();
+		if ($user === null || $conf === null || FreshRSS_Context::$system_conf === null) {
 			self::unauthorized();
 		}
-		$user = Minz_Session::param('currentUser', '_');
 		//Minz_Log::debug('token('. $user . ')', API_LOG);	//TODO: Implement real token that expires
 		$token = str_pad(sha1(FreshRSS_Context::$system_conf->salt . $user . $conf->apiPasswordHash), 57, 'Z');	//Must have 57 characters
 		echo $token, "\n";
@@ -243,11 +243,11 @@ final class GReaderAPI {
 
 	private static function checkToken(?FreshRSS_UserConfiguration $conf, string $token): bool {
 		//http://code.google.com/p/google-reader-api/wiki/ActionToken
-		if ($conf == null || FreshRSS_Context::$system_conf == null) {
+		$user = Minz_User::name();
+		if ($user === null || $conf === null || FreshRSS_Context::$system_conf === null) {
 			self::unauthorized();
 		}
-		$user = Minz_Session::param('currentUser', '_');
-		if ($user !== '_' && (	//TODO: Check security consequences
+		if ($user !== Minz_User::INTERNAL_USER && (	//TODO: Check security consequences
 			$token === '' || //FeedMe
 			$token === 'x')) { //Reeder
 			return true;
@@ -265,7 +265,7 @@ final class GReaderAPI {
 		if (FreshRSS_Context::$user_conf == null) {
 			self::unauthorized();
 		}
-		$user = Minz_Session::param('currentUser', '_');
+		$user = Minz_User::name();
 		exit(json_encode(array(
 				'userId' => $user,
 				'userName' => $user,
@@ -284,7 +284,7 @@ final class GReaderAPI {
 		);
 
 		$categoryDAO = FreshRSS_Factory::createCategoryDao();
-		$categories = $categoryDAO->listCategories(true, false);
+		$categories = $categoryDAO->listCategories(true, false) ?: [];
 		foreach ($categories as $cat) {
 			$tags[] = array(
 				'id' => 'user/-/label/' . htmlspecialchars_decode($cat->name(), ENT_QUOTES),
@@ -294,7 +294,7 @@ final class GReaderAPI {
 		}
 
 		$tagDAO = FreshRSS_Factory::createTagDao();
-		$labels = $tagDAO->listTags(true);
+		$labels = $tagDAO->listTags(true) ?: [];
 		foreach ($labels as $label) {
 			$tags[] = array(
 				'id' => 'user/-/label/' . htmlspecialchars_decode($label->name(), ENT_QUOTES),
@@ -310,7 +310,7 @@ final class GReaderAPI {
 
 	/** @return never */
 	private static function subscriptionExport() {
-		$user = '' . Minz_Session::param('currentUser', '_');
+		$user = Minz_User::name() ?? Minz_User::INTERNAL_USER;
 		$export_service = new FreshRSS_Export_Service($user);
 		[$filename, $content] = $export_service->generateOpml();
 		header('Content-Type: application/xml; charset=UTF-8');
@@ -321,7 +321,7 @@ final class GReaderAPI {
 
 	/** @return never */
 	private static function subscriptionImport(string $opml) {
-		$user = '' . Minz_Session::param('currentUser', '_');
+		$user = Minz_User::name() ?? Minz_User::INTERNAL_USER;
 		$importService = new FreshRSS_Import_Service($user);
 		$importService->importOpml($opml);
 		if ($importService->lastStatus()) {
@@ -345,7 +345,7 @@ final class GReaderAPI {
 		$subscriptions = array();
 
 		$categoryDAO = FreshRSS_Factory::createCategoryDao();
-		foreach ($categoryDAO->listCategories(true, true) as $cat) {
+		foreach ($categoryDAO->listCategories(true, true) ?: [] as $cat) {
 			foreach ($cat->feeds() as $feed) {
 				$subscriptions[] = [
 					'id' => 'feed/' . $feed->id(),
@@ -390,7 +390,7 @@ final class GReaderAPI {
 			if (strpos($add, 'user/-/label/') === 0) {
 				$c_name = substr($add, 13);
 			} else {
-				$user = Minz_Session::param('currentUser', '_');
+				$user = Minz_User::name();
 				$prefix = 'user/' . $user . '/label/';
 				if (strpos($add, $prefix) === 0) {
 					$c_name = substr($add, strlen($prefix));
@@ -418,7 +418,7 @@ final class GReaderAPI {
 					if ($action === 'subscribe') {
 						continue;
 					}
-					$feedId = $streamUrl;
+					$feedId = (int)$streamUrl;
 				} else {
 					$streamUrl = htmlspecialchars($streamUrl, ENT_COMPAT, 'UTF-8');
 					$feed = $feedDAO->searchByUrl($streamUrl);
@@ -497,7 +497,7 @@ final class GReaderAPI {
 		$feedDAO = FreshRSS_Factory::createFeedDao();
 		$feedsNewestItemUsec = $feedDAO->listFeedsNewestItemUsec();
 
-		foreach ($categoryDAO->listCategories(true, true) as $cat) {
+		foreach ($categoryDAO->listCategories(true, true) ?: [] as $cat) {
 			$catLastUpdate = 0;
 			foreach ($cat->feeds() as $feed) {
 				$lastUpdate = $feedsNewestItemUsec['f_' . $feed->id()] ?? 0;
@@ -523,7 +523,7 @@ final class GReaderAPI {
 
 		$tagDAO = FreshRSS_Factory::createTagDao();
 		$tagsNewestItemUsec = $tagDAO->listTagsNewestItemUsec();
-		foreach ($tagDAO->listTags(true) as $label) {
+		foreach ($tagDAO->listTags(true) ?: [] as $label) {
 			$lastUpdate = $tagsNewestItemUsec['t_' . $label->id()] ?? 0;
 			$unreadcounts[] = array(
 				'id' => 'user/-/label/' . htmlspecialchars_decode($label->name(), ENT_QUOTES),
@@ -554,13 +554,10 @@ final class GReaderAPI {
 			return array();
 		}
 		$catDAO = FreshRSS_Factory::createCategoryDao();
-		$categories = $catDAO->listCategories(true);
+		$categories = $catDAO->listCategories(true) ?: [];
 
 		$tagDAO = FreshRSS_Factory::createTagDao();
 		$entryIdsTagNames = $tagDAO->getEntryIdsTagNames($entries);
-		if ($entryIdsTagNames == false) {
-			$entryIdsTagNames = array();
-		}
 
 		$items = array();
 		foreach ($entries as $item) {
@@ -571,20 +568,20 @@ final class GReaderAPI {
 			}
 
 			$feed = FreshRSS_CategoryDAO::findFeed($categories, $entry->feedId());
+			if ($feed === null) {
+				continue;
+			}
 			$entry->_feed($feed);
 
-			if (isset($entryIdsTagNames['e_' . $entry->id()])) {
-				$entry->_tags($entryIdsTagNames['e_' . $entry->id()]);
-			}
-
-			$items[] = $entry->toGReader('compat');
+			$items[] = $entry->toGReader('compat', $entryIdsTagNames['e_' . $entry->id()] ?? []);
 		}
 		return $items;
 	}
 
 	/**
+	 * @param 'A'|'c'|'f'|'s' $type
 	 * @param string|int $streamId
-	 * @return array{string,int,int,FreshRSS_BooleanSearch}
+	 * @return array{'A'|'c'|'f'|'s'|'t',int,int,FreshRSS_BooleanSearch}
 	 */
 	private static function streamContentsFilters(string $type, $streamId,
 		string $filter_target, string $exclude_target, int $start_time, int $stop_time): array {
@@ -745,7 +742,7 @@ final class GReaderAPI {
 
 		$entryDAO = FreshRSS_Factory::createEntryDao();
 		$ids = $entryDAO->listIdsWhere($type, $id, $state, $order === 'o' ? 'ASC' : 'DESC', $count, $continuation, $searches);
-		if ($ids === false) {
+		if ($ids === null) {
 			self::internalServerError();
 		}
 
@@ -758,9 +755,9 @@ final class GReaderAPI {
 			$ids = [ 0 ];	//For News+ bug https://github.com/noinnion/newsplus/issues/84#issuecomment-57834632
 		}
 		$itemRefs = array();
-		foreach ($ids as $id) {
+		foreach ($ids as $entryId) {
 			$itemRefs[] = array(
-				'id' => '' . $id,	//64-bit decimal
+				'id' => '' . $entryId,	//64-bit decimal
 			);
 		}
 
@@ -768,9 +765,9 @@ final class GReaderAPI {
 			'itemRefs' => $itemRefs,
 		);
 		if (count($ids) >= $count) {
-			$id = end($ids);
-			if ($id != false) {
-				$response['continuation'] = '' . $id;
+			$entryId = end($ids);
+			if ($entryId != false) {
+				$response['continuation'] = '' . $entryId;
 			}
 		}
 
@@ -840,7 +837,7 @@ final class GReaderAPI {
 				if (strpos($a, 'user/-/label/') === 0) {
 					$tagName = substr($a, 13);
 				} else {
-					$user = Minz_Session::param('currentUser', '_');
+					$user = Minz_User::name() ?? '';
 					$prefix = 'user/' . $user . '/label/';
 					if (strpos($a, $prefix) === 0) {
 						$tagName = substr($a, strlen($prefix));
@@ -897,13 +894,15 @@ final class GReaderAPI {
 			$categoryDAO = FreshRSS_Factory::createCategoryDao();
 			$cat = $categoryDAO->searchByName($s);
 			if ($cat != null) {
-				$categoryDAO->updateCategory($cat->id(), array('name' => $dest));
+				$categoryDAO->updateCategory($cat->id(), [
+					'name' => $dest, 'kind' => $cat->kind(), 'attributes' => $cat->attributes()
+				]);
 				exit('OK');
 			} else {
 				$tagDAO = FreshRSS_Factory::createTagDao();
 				$tag = $tagDAO->searchByName($s);
 				if ($tag != null) {
-					$tagDAO->updateTag($tag->id(), array('name' => $dest));
+					$tagDAO->updateTagName($tag->id(), $dest);
 					exit('OK');
 				}
 			}
@@ -1013,7 +1012,7 @@ final class GReaderAPI {
 		if (FreshRSS_Context::$user_conf != null) {
 			Minz_Translate::init(FreshRSS_Context::$user_conf->language);
 			Minz_ExtensionManager::init();
-			Minz_ExtensionManager::enableByList(FreshRSS_Context::$user_conf->extensions_enabled);
+			Minz_ExtensionManager::enableByList(FreshRSS_Context::$user_conf->extensions_enabled, 'user');
 		} else {
 			Minz_Translate::init();
 		}
@@ -1023,7 +1022,7 @@ final class GReaderAPI {
 				self::clientLogin($_REQUEST['Email'], $_REQUEST['Passwd']);
 			}
 		} elseif (isset($pathInfos[3], $pathInfos[4]) && $pathInfos[1] === 'reader' && $pathInfos[2] === 'api' && $pathInfos[3] === '0') {
-			if (Minz_Session::param('currentUser', '') == '') {
+			if (Minz_User::name() === null) {
 				self::unauthorized();
 			}
 			$timestamp = isset($_GET['ck']) ? (int)$_GET['ck'] : 0;	//ck=[unix timestamp] : Use the current Unix time here, helps Google with caching.
@@ -1066,7 +1065,7 @@ final class GReaderAPI {
 								$include_target = $pathInfos[7];
 								if ($include_target != '' && !ctype_digit($include_target)) {
 									$include_target = empty($_SERVER['REQUEST_URI']) ? '' : $_SERVER['REQUEST_URI'];
-									if (preg_match('#/reader/api/0/stream/contents/feed/([A-Za-z0-9\'!*()%$_.~+-]+)#', $include_target, $matches)) {
+									if (preg_match('#/reader/api/0/stream/contents/feed/([A-Za-z0-9\'!*()%$_.~+-]+)#', $include_target, $matches) === 1) {
 										$include_target = urldecode($matches[1]);
 									} else {
 										$include_target = '';

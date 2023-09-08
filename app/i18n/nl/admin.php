@@ -147,7 +147,7 @@ return array(
 		'main_stream' => 'Overzicht',
 		'no_idle' => 'Er is geen gepauzeerde feed!',
 		'number_entries' => '%d artikelen',
-		'percent_of_total' => '%% van totaal',
+		'percent_of_total' => '% van totaal',
 		'repartition' => 'Artikelverdeling',
 		'status_favorites' => 'Favorieten',
 		'status_read' => 'Gelezen',
@@ -192,11 +192,20 @@ return array(
 	'update' => array(
 		'_' => 'Versie controle',
 		'apply' => 'Toepassen',
+		'changelog' => 'Changelog',	// TODO
 		'check' => 'Controleer op nieuwe versies',
+		'copiedFromURL' => 'update.php copied from %s to ./data',	// TODO
 		'current_version' => 'Uw huidige versie van FreshRSS is %s.',
 		'last' => 'Laatste controle: %s',
+		'loading' => 'Updating…',	// TODO
 		'none' => 'Geen nieuwe versie om toe te passen',
+		'releaseChannel' => array(
+			'_' => 'Release channel',	// TODO
+			'edge' => 'Rolling release (“edge”)',	// TODO
+			'latest' => 'Stable release (“latest”)',	// TODO
+		),
 		'title' => 'Vernieuw systeem',
+		'viaGit' => 'Update via git and Github.com started',	// TODO
 	),
 	'user' => array(
 		'admin' => 'Beheerder',
