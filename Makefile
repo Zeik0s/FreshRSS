@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 
 ifndef TAG
-	TAG=alpine
+	TAG=apache
 endif
 
 PORT ?= 8080
@@ -32,7 +32,7 @@ endif
 build: ## Build a Docker image
 	docker build \
 		--pull \
-		--tag freshrss/freshrss:$(TAG) \
+		--tag zeik0s/freshrss:$(TAG) \
 		--file Docker/$(DOCKERFILE) .
 
 .PHONY: start
