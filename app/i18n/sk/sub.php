@@ -140,11 +140,12 @@ return array(
 		'priority' => array(
 			'_' => 'Viditeľnosť',
 			'archived' => 'Nezobrazovať (archivované)',
+			'category' => 'Zobraziť vo svojej kategórii',
+			'important' => 'Show in important feeds',	// TODO
 			'main_stream' => 'Zobraziť v prehľade kanálov',
-			'normal' => 'Zobraziť vo svojej kategórii',
 		),
 		'proxy' => 'Na sťahovanie tohto kanálu nastaviť proxy',
-		'proxy_help' => 'Vyberte protokol (napr.: SOCKS5) a zadajte adresu proxy servera (napr.: <kbd>127.0.0.1:1080</kbd>)',
+		'proxy_help' => 'Vyberte protokol (napr.: SOCKS5) a zadajte adresu proxy servera (napr.: <kbd>127.0.0.1:1080</kbd> or <kbd>username:password@127.0.0.1:1080</kbd>)',	// DIRTY
 		'selector_preview' => array(
 			'show_raw' => 'Zobraziť zdrojový kód',
 			'show_rendered' => 'Zobraziť obsah',
@@ -195,6 +196,7 @@ return array(
 		'subscription_tools' => 'Nástroje na odoberanie kanálov',
 	),
 	'tag' => array(
+		'auto_label' => 'Add this label to new articles',	// TODO
 		'name' => 'Názov',
 		'new_name' => 'Nový názov',
 		'old_name' => 'Starý názov',

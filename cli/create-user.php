@@ -1,5 +1,7 @@
 #!/usr/bin/env php
 <?php
+declare(strict_types=1);
+
 $isUpdate = false;
 require(__DIR__ . '/_update-or-create-user.php');
 
@@ -10,7 +12,7 @@ if (!FreshRSS_user_Controller::checkUsername($username)) {
 }
 
 $usernames = listUsers();
-if (preg_grep("/^$username$/i", $usernames) !== false) {
+if (preg_grep("/^$username$/i", $usernames)) {
 	fail('FreshRSS warning: username already exists “' . $username . '”', EXIT_CODE_ALREADY_EXISTS);
 }
 
@@ -36,7 +38,7 @@ if (!empty($options['api_password'])) {
 	}
 }
 
-invalidateHttpCache(FreshRSS_Context::$system_conf->default_user);
+invalidateHttpCache(FreshRSS_Context::systemConf()->default_user);
 
 echo 'ℹ️ Remember to refresh the feeds of the user: ', $username ,
 	"\t", './cli/actualize-user.php --user ', $username, "\n";
