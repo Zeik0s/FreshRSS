@@ -16,6 +16,7 @@ class FreshRSS_tag_Controller extends FreshRSS_ActionController {
 	 * the common boilerplate for every action. It is triggered by the
 	 * underlying framework.
 	 */
+	#[\Override]
 	public function firstAction(): void {
 		// If ajax request, we do not print layout
 		$this->ajax = Minz_Request::paramBoolean('ajax');
@@ -160,7 +161,7 @@ class FreshRSS_tag_Controller extends FreshRSS_ActionController {
 
 	/**
 	 * @throws Minz_ConfigurationNamespaceException
-	 * @throws Minz_PDOConnectionException|JsonException
+	 * @throws Minz_PDOConnectionException
 	 */
 	public function renameAction(): void {
 		if (!FreshRSS_Auth::hasAccess()) {
@@ -195,10 +196,12 @@ class FreshRSS_tag_Controller extends FreshRSS_ActionController {
 	}
 
 	public function indexAction(): void {
+		FreshRSS_View::prependTitle(_t('sub.menu.label_management') . ' · ');
+
 		if (!FreshRSS_Auth::hasAccess()) {
 			Minz_Error::error(403);
 		}
 		$tagDAO = FreshRSS_Factory::createTagDao();
-		$this->view->tags = $tagDAO->listTags() ?: [];
+		$this->view->tags = $tagDAO->listTags(true) ?: [];
 	}
 }

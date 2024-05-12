@@ -66,6 +66,11 @@ return array(
 		'description' => 'Leírás',
 		'empty' => 'Ez a hírforrás üres. Ellenőrizd hogy van e tartalom rajta.',
 		'error' => 'Ez a hírforrás nem működik. Ellenőrizd az elérhetőségét és frissítsd.',
+		'export-as-opml' => array(
+			'download' => 'Letöltés',
+			'help' => 'XML fájl',
+			'label' => 'Exportálás OPML formátumban',
+		),
 		'filteractions' => array(
 			'_' => 'Szűrő műveletek',
 			'help' => 'Írj egy szűrőt soronként. Műveletek <a href="https://freshrss.github.io/FreshRSS/en/users/10_filter.html#with-the-search-field" target="_blank">a dokumentációban</a>.',
@@ -108,7 +113,7 @@ return array(
 				),
 				'item_title' => array(
 					'_' => 'elem cím',
-					'help' => 'Használja az <a href="https://developer.mozilla.org/docs/Web/XPath/Axes" target="_blank">XPath axis</a> <code>descendant::</code> mint <code>descendant::h2</code>',
+					'help' => 'Használja az <a href="https://developer.mozilla.org/docs/Web/XPath/Axes" target="_blank">XPath Axes</a> <code>descendant::</code> mint <code>descendant::h2</code>',
 				),
 				'item_uid' => array(
 					'_' => 'elem egyedi ID',
@@ -121,6 +126,45 @@ return array(
 				'relative' => 'XPath (az elemhez viszonyítva) ehhez:',
 				'xpath' => 'XPath ehhez:',
 			),
+			'json_dotnotation' => array(
+				'_' => 'JSON (pont jelölés)',
+				'feed_title' => array(
+					'_' => 'hírforrás címe',
+					'help' => 'Például: <code>meta.title</code> vagy egy statikus sztring: <code>"Az egyedi hírforrásom"</code>',
+				),
+				'help' => 'A JSON pontjelölés pontokat használ az objektumok között és zárójeleket a tömbökhöz (pl. <code>data.items[0].title</code>)',
+				'item' => array(
+					'_' => 'hírek keresése <strong>elemek</strong><br /><small>(legfontosabb)</small>',
+					'help' => 'JSON útvonal az elemeket tartalmazó tömbhöz, pl. <code>newsItems</code>',
+				),
+				'item_author' => 'elem szerző',
+				'item_categories' => 'elem címkék',
+				'item_content' => array(
+					'_' => 'elem tartalom',
+					'help' => 'Kulcs ami alatt a tartalom megtalálható, például <code>tartalom</code>',
+				),
+				'item_thumbnail' => array(
+					'_' => 'elem előnézeti kép',
+					'help' => 'Például: <code>image</code>',
+				),
+				'item_timeFormat' => array(
+					'_' => 'Egyedi dátum/idő formátum',
+					'help' => 'Opcionális. Egy a <a href="https://php.net/datetime.createfromformat" target="_blank"><code>DateTime::createFromFormat()</code></a> funkció által támogatott formátum, például: <code>d-m-Y H:i:s</code>',
+				),
+				'item_timestamp' => array(
+					'_' => 'elem dátum',
+					'help' => 'Az eredményt az <a href="https://php.net/strtotime" target="_blank"><code>strtotime()</code></a> php függvény fogja értelmezni',
+				),
+				'item_title' => 'elem címe',
+				'item_uid' => 'elem egyedi azonosító ID',
+				'item_uri' => array(
+					'_' => 'elem link (URL)',
+					'help' => 'Például: <code>permalink</code>',
+				),
+				'json' => 'pontjelölés ehhez:',
+				'relative' => 'pont jelölt útvonal (relatív az elemhez):',
+			),
+			'jsonfeed' => 'JSON Hírforrás',
 			'rss' => 'RSS / Atom (alapértelmezett)',
 			'xml_xpath' => 'XML + XPath',	// IGNORE
 		),
@@ -133,6 +177,11 @@ return array(
 		),
 		'max_http_redir' => 'Max HTTP átirányítás',
 		'max_http_redir_help' => '0 vagy üresen hagyva kikapcsolt, -1 a végtelen átirányításhoz',
+		'method' => array(
+			'_' => 'HTTP Módszer',
+		),
+		'method_help' => 'A POST metódus hasznos adattartalma automatikusan támogatja az <code>application/x-www-form-urlencoded</code> és <code>application/json</code>',
+		'method_postparams' => 'POST metódus adattartalma',
 		'moved_category_deleted' => 'Ha kitörölsz egy kategóriát, az alá tartozó hírforrások automatikusan ide kerülnek <em>%s</em>.',
 		'mute' => 'némítás',
 		'no_selected' => 'Nincsen hírforrás kiválasztva.',
@@ -196,7 +245,7 @@ return array(
 		'subscription_tools' => 'Hírforrás eszközök',
 	),
 	'tag' => array(
-		'auto_label' => 'Add this label to new articles',	// TODO
+		'auto_label' => 'Adja hozzá automatikusan ezt a címkét az új cikkekhez',
 		'name' => 'Név',
 		'new_name' => 'Új név',
 		'old_name' => 'Régi név',
