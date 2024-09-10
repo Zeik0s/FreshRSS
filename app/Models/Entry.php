@@ -32,13 +32,10 @@ class FreshRSS_Entry extends Minz_Model {
 	private array $tags = [];
 
 	/**
-	 * @param int|string $pubdate
-	 * @param bool|int|null $is_read
-	 * @param bool|int|null $is_favorite
 	 * @param string|array<string> $tags
 	 */
 	public function __construct(int $feedId = 0, string $guid = '', string $title = '', string $authors = '', string $content = '',
-			string $link = '', $pubdate = 0, $is_read = false, $is_favorite = false, $tags = '') {
+			string $link = '', int|string $pubdate = 0, bool|int|null $is_read = false, bool|int|null $is_favorite = false, $tags = '') {
 		$this->_title($title);
 		$this->_authors($authors);
 		$this->_content($content);
@@ -149,7 +146,7 @@ class FreshRSS_Entry extends Minz_Model {
 	 * @phpstan-return ($asString is true ? string : array<string>)
 	 * @return string|array<string>
 	 */
-	public function authors(bool $asString = false) {
+	public function authors(bool $asString = false): string|array {
 		if ($asString) {
 			return $this->authors == null ? '' : ';' . implode('; ', $this->authors);
 		} else {
@@ -172,7 +169,7 @@ class FreshRSS_Entry extends Minz_Model {
 		$mime = $enclosure['type'] ?? '';
 
 		return ($elink != '' && $medium === 'image') || strpos($mime, 'image') === 0 ||
-			($mime == '' && $length == 0 && preg_match('/[.](avif|gif|jpe?g|png|svg|webp)$/i', $elink));
+			($mime == '' && $length == 0 && preg_match('/[.](avif|gif|jpe?g|png|svg|webp)([?#]|$)/i', $elink));
 	}
 
 	/**
@@ -384,16 +381,15 @@ HTML;
 	}
 	/**
 	 * @phpstan-return ($raw is false ? string : int)
-	 * @return string|int
 	 */
-	public function date(bool $raw = false) {
+	public function date(bool $raw = false): int|string {
 		if ($raw) {
 			return $this->date;
 		}
 		return timestamptodate($this->date);
 	}
 	public function machineReadableDate(): string {
-		return @date (DATE_ATOM, $this->date);
+		return @date(DATE_ATOM, $this->date);
 	}
 
 	public function lastSeen(): int {
@@ -402,9 +398,8 @@ HTML;
 
 	/**
 	 * @phpstan-return ($raw is false ? string : ($microsecond is true ? string : int))
-	 * @return int|string
 	 */
-	public function dateAdded(bool $raw = false, bool $microsecond = false) {
+	public function dateAdded(bool $raw = false, bool $microsecond = false): int|string {
 		if ($raw) {
 			if ($microsecond) {
 				return $this->date_added;
@@ -451,7 +446,7 @@ HTML;
 	 * @phpstan-return ($asString is true ? string : array<string>)
 	 * @return string|array<string>
 	 */
-	public function tags(bool $asString = false) {
+	public function tags(bool $asString = false): array|string {
 		if ($asString) {
 			return $this->tags == null ? '' : '#' . implode(' #', $this->tags);
 		} else {
@@ -577,12 +572,20 @@ HTML;
 		foreach ($booleanSearch->searches() as $filter) {
 			if ($filter instanceof FreshRSS_BooleanSearch) {
 				// BooleanSearches are combined by AND (default) or OR or AND NOT (special cases) operators and are recursive
-				if ($filter->operator() === 'OR') {
-					$ok |= $this->matches($filter);
-				} elseif ($filter->operator() === 'AND NOT') {
-					$ok &= !$this->matches($filter);
-				} else {	// AND
-					$ok &= $this->matches($filter);
+				switch ($filter->operator()) {
+					case 'OR':
+						$ok |= $this->matches($filter);
+						break;
+					case 'OR NOT':
+						$ok |= !$this->matches($filter);
+						break;
+					case 'AND NOT':
+						$ok &= !$this->matches($filter);
+						break;
+					case 'AND':
+					default:
+						$ok &= $this->matches($filter);
+						break;
 				}
 			} elseif ($filter instanceof FreshRSS_Search) {
 				// Searches are combined by OR and are not recursive
@@ -628,9 +631,19 @@ HTML;
 						$ok &= stripos(implode(';', $this->authors), $author) !== false;
 					}
 				}
+				if ($ok && $filter->getAuthorRegex()) {
+					foreach ($filter->getAuthorRegex() as $author) {
+						$ok &= preg_match($author, implode("\n", $this->authors)) === 1;
+					}
+				}
 				if ($ok && $filter->getNotAuthor()) {
 					foreach ($filter->getNotAuthor() as $author) {
 						$ok &= stripos(implode(';', $this->authors), $author) === false;
+					}
+				}
+				if ($ok && $filter->getNotAuthorRegex()) {
+					foreach ($filter->getNotAuthorRegex() as $author) {
+						$ok &= preg_match($author, implode("\n", $this->authors)) === 0;
 					}
 				}
 				if ($ok && $filter->getIntitle()) {
@@ -638,17 +651,42 @@ HTML;
 						$ok &= stripos($this->title, $title) !== false;
 					}
 				}
+				if ($ok && $filter->getIntitleRegex()) {
+					foreach ($filter->getIntitleRegex() as $title) {
+						$ok &= preg_match($title, $this->title) === 1;
+					}
+				}
 				if ($ok && $filter->getNotIntitle()) {
 					foreach ($filter->getNotIntitle() as $title) {
 						$ok &= stripos($this->title, $title) === false;
+					}
+				}
+				if ($ok && $filter->getNotIntitleRegex()) {
+					foreach ($filter->getNotIntitleRegex() as $title) {
+						$ok &= preg_match($title, $this->title) === 0;
 					}
 				}
 				if ($ok && $filter->getTags()) {
 					foreach ($filter->getTags() as $tag2) {
 						$found = false;
 						foreach ($this->tags as $tag1) {
+							$tag1 = ltrim($tag1, '#');
 							if (strcasecmp($tag1, $tag2) === 0) {
 								$found = true;
+								break;
+							}
+						}
+						$ok &= $found;
+					}
+				}
+				if ($ok && $filter->getTagsRegex()) {
+					foreach ($filter->getTagsRegex() as $tag2) {
+						$found = false;
+						foreach ($this->tags as $tag1) {
+							$tag1 = ltrim($tag1, '#');
+							if (preg_match($tag2, $tag1) === 1) {
+								$found = true;
+								break;
 							}
 						}
 						$ok &= $found;
@@ -658,8 +696,23 @@ HTML;
 					foreach ($filter->getNotTags() as $tag2) {
 						$found = false;
 						foreach ($this->tags as $tag1) {
+							$tag1 = ltrim($tag1, '#');
 							if (strcasecmp($tag1, $tag2) === 0) {
 								$found = true;
+								break;
+							}
+						}
+						$ok &= !$found;
+					}
+				}
+				if ($ok && $filter->getNotTagsRegex()) {
+					foreach ($filter->getNotTagsRegex() as $tag2) {
+						$found = false;
+						foreach ($this->tags as $tag1) {
+							$tag1 = ltrim($tag1, '#');
+							if (preg_match($tag2, $tag1) === 1) {
+								$found = true;
+								break;
 							}
 						}
 						$ok &= !$found;
@@ -670,9 +723,19 @@ HTML;
 						$ok &= stripos($this->link, $url) !== false;
 					}
 				}
+				if ($ok && $filter->getInurlRegex()) {
+					foreach ($filter->getInurlRegex() as $url) {
+						$ok &= preg_match($url, $this->link) === 1;
+					}
+				}
 				if ($ok && $filter->getNotInurl()) {
 					foreach ($filter->getNotInurl() as $url) {
 						$ok &= stripos($this->link, $url) === false;
+					}
+				}
+				if ($ok && $filter->getNotInurlRegex()) {
+					foreach ($filter->getNotInurlRegex() as $url) {
+						$ok &= preg_match($url, $this->link) === 0;
 					}
 				}
 				if ($ok && $filter->getSearch()) {
@@ -683,6 +746,16 @@ HTML;
 				if ($ok && $filter->getNotSearch()) {
 					foreach ($filter->getNotSearch() as $needle) {
 						$ok &= (stripos($this->title, $needle) === false && stripos($this->content, $needle) === false);
+					}
+				}
+				if ($ok && $filter->getSearchRegex()) {
+					foreach ($filter->getSearchRegex() as $needle) {
+						$ok &= (preg_match($needle, $this->title) === 1 || preg_match($needle, $this->content) === 1);
+					}
+				}
+				if ($ok && $filter->getNotSearchRegex()) {
+					foreach ($filter->getNotSearchRegex() as $needle) {
+						$ok &= (preg_match($needle, $this->title) === 0 && preg_match($needle, $this->content) === 0);
 					}
 				}
 				if ($ok) {
@@ -711,26 +784,24 @@ HTML;
 			}
 		}
 		FreshRSS_Context::userConf()->applyFilterActions($this);
-		if ($feed->category() !== null) {
-			$feed->category()->applyFilterActions($this);
-		}
+		$feed->category()?->applyFilterActions($this);
 		$feed->applyFilterActions($this);
 	}
 
 	public function isDay(int $day, int $today): bool {
 		$date = $this->dateAdded(true);
 		switch ($day) {
-		case FreshRSS_Days::TODAY:
-			$tomorrow = $today + 86400;
-			return $date >= $today && $date < $tomorrow;
-		case FreshRSS_Days::YESTERDAY:
-			$yesterday = $today - 86400;
-			return $date >= $yesterday && $date < $today;
-		case FreshRSS_Days::BEFORE_YESTERDAY:
-			$yesterday = $today - 86400;
-			return $date < $yesterday;
-		default:
-			return false;
+			case FreshRSS_Days::TODAY:
+				$tomorrow = $today + 86400;
+				return $date >= $today && $date < $tomorrow;
+			case FreshRSS_Days::YESTERDAY:
+				$yesterday = $today - 86400;
+				return $date >= $yesterday && $date < $today;
+			case FreshRSS_Days::BEFORE_YESTERDAY:
+				$yesterday = $today - 86400;
+				return $date < $yesterday;
+			default:
+				return false;
 		}
 	}
 
@@ -777,7 +848,7 @@ HTML;
 			$content = '';
 			$cssSelector = htmlspecialchars_decode($feed->pathEntries(), ENT_QUOTES);
 			$cssSelector = trim($cssSelector, ', ');
-			$nodes = $xpath->query((new Gt\CssXPath\Translator($cssSelector))->asXPath());
+			$nodes = $xpath->query((new Gt\CssXPath\Translator($cssSelector, '//'))->asXPath());
 			if ($nodes != false) {
 				$path_entries_filter = $feed->attributeString('path_entries_filter') ?? '';
 				$path_entries_filter = trim($path_entries_filter, ', ');
@@ -785,7 +856,7 @@ HTML;
 					if ($path_entries_filter !== '') {
 						$filterednodes = $xpath->query((new Gt\CssXPath\Translator($path_entries_filter))->asXPath(), $node) ?: [];
 						foreach ($filterednodes as $filterednode) {
-							if ($filterednode->parentNode === null) {
+							if (!($filterednode instanceof DOMElement) || $filterednode->parentNode === null) {
 								continue;
 							}
 							$filterednode->parentNode->removeChild($filterednode);
@@ -801,15 +872,20 @@ HTML;
 		}
 	}
 
+	/**
+	 * @return bool True if the content was modified, false otherwise
+	 */
 	public function loadCompleteContent(bool $force = false): bool {
 		// Gestion du contenu
 		// Trying to fetch full article content even when feeds do not propose it
 		$feed = $this->feed();
-		if ($feed != null && trim($feed->pathEntries()) != '') {
+		if ($feed === null) {
+			return false;
+		}
+		if (trim($feed->pathEntries()) != '') {
 			$entryDAO = FreshRSS_Factory::createEntryDao();
 			$entry = $force ? null : $entryDAO->searchByGuid($this->feedId, $this->guid);
-
-			if ($entry) {
+			if ($entry !== null) {
 				// l’article existe déjà en BDD, en se contente de recharger ce contenu
 				$this->content = $entry->content(false);
 			} else {
@@ -831,7 +907,6 @@ HTML;
 								$this->content = $fullContent;
 								break;
 						}
-
 						return true;
 					}
 				} catch (Exception $e) {
@@ -839,6 +914,30 @@ HTML;
 					Minz_Log::warning($e->getMessage());
 				}
 			}
+		} elseif (trim($feed->attributeString('path_entries_filter') ?? '') !== '') {
+			$doc = new DOMDocument();
+			$utf8BOM = "\xEF\xBB\xBF";
+			if (!$doc->loadHTML($utf8BOM . $this->content, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING)) {
+				return false;
+			}
+			$modified = false;
+			$xpath = new DOMXPath($doc);
+			$filterednodes = $xpath->query((new Gt\CssXPath\Translator($feed->attributeString('path_entries_filter') ?? '', '//'))->asXPath()) ?: [];
+			foreach ($filterednodes as $filterednode) {
+				if (!($filterednode instanceof DOMElement) || $filterednode->parentNode === null) {
+					continue;
+				}
+				$filterednode->parentNode->removeChild($filterednode);
+				$modified = true;
+			}
+			if ($modified) {
+				$html = $doc->saveHTML();
+				if (!is_string($html)) {
+					return false;
+				}
+				$this->content = $html;
+			}
+			return $modified;
 		}
 		return false;
 	}
