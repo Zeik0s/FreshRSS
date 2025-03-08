@@ -93,6 +93,7 @@ class FreshRSS_FeedDAO extends Minz_ModelPdo {
 				'name' => $feed->name(true),
 				'website' => $feed->website(),
 				'description' => $feed->description(),
+				'priority' => $feed->priority(),
 				'lastUpdate' => 0,
 				'error' => false,
 				'pathEntries' => $feed->pathEntries(),
@@ -116,7 +117,9 @@ class FreshRSS_FeedDAO extends Minz_ModelPdo {
 			// Merge existing and import attributes
 			$existingAttributes = $feed_search->attributes();
 			$importAttributes = $feed->attributes();
-			$feed->_attributes(array_replace_recursive($existingAttributes, $importAttributes));
+			$mergedAttributes = array_replace_recursive($existingAttributes, $importAttributes);
+			$mergedAttributes = array_filter($mergedAttributes, 'is_string', ARRAY_FILTER_USE_KEY);
+			$feed->_attributes($mergedAttributes);
 
 			// Update some values of the existing feed using the import
 			$values = [
@@ -374,16 +377,17 @@ SQL;
 	 * @return array<int,FreshRSS_Feed> where the key is the feed ID
 	 */
 	public function listFeedsOrderUpdate(int $defaultCacheDuration = 3600, int $limit = 0): array {
-		$sql = 'SELECT id, url, kind, category, name, website, `lastUpdate`, `pathEntries`, `httpAuth`, ttl, attributes, `cache_nbEntries`, `cache_nbUnreads` '
-			. 'FROM `_feed` '
+		$sql = 'SELECT * FROM `_feed` '
 			. ($defaultCacheDuration < 0 ? '' : 'WHERE ttl >= ' . FreshRSS_Feed::TTL_DEFAULT
 				. ' AND `lastUpdate` < (' . (time() + 60)
 				. '-(CASE WHEN ttl=' . FreshRSS_Feed::TTL_DEFAULT . ' THEN ' . intval($defaultCacheDuration) . ' ELSE ttl END)) ')
 			. 'ORDER BY `lastUpdate` '
 			. ($limit < 1 ? '' : 'LIMIT ' . intval($limit));
 		$stm = $this->pdo->query($sql);
-		if ($stm !== false) {
-			return self::daoToFeeds($stm->fetchAll(PDO::FETCH_ASSOC));
+		if ($stm !== false && ($res = $stm->fetchAll(PDO::FETCH_ASSOC)) !== false) {
+			/** @var list<array{id?:int,url?:string,kind?:int,category?:int,name?:string,website?:string,description?:string,lastUpdate?:int,priority?:int,
+			 * pathEntries?:string,httpAuth?:string,error?:int|bool,ttl?:int,attributes?:string,cache_nbUnreads?:int,cache_nbEntries?:int}> $res */
+			return self::daoToFeeds($res);
 		} else {
 			$info = $this->pdo->errorInfo();
 			/** @var array{0:string,1:int,2:string} $info */
@@ -613,6 +617,6 @@ SQL;
 			return -1;
 		}
 		$res = $stm->fetchAll(PDO::FETCH_COLUMN, 0);
-		return (int)($res[0] ?? 0);
+		return is_numeric($res[0] ?? null) ? (int)$res[0] : 0;
 	}
 }

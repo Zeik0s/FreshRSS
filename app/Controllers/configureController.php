@@ -75,7 +75,7 @@ class FreshRSS_configure_Controller extends FreshRSS_ActionController {
 			Minz_Translate::reset(FreshRSS_Context::userConf()->language);
 			invalidateHttpCache();
 
-			Minz_Request::good(_t('feedback.conf.updated'), [ 'c' => 'configure', 'a' => 'display' ]);
+			Minz_Request::good(_t('feedback.conf.updated'), [ 'c' => 'configure', 'a' => 'display' ], 'displayAction');
 		}
 
 		$this->view->themes = FreshRSS_Themes::get();
@@ -179,10 +179,10 @@ class FreshRSS_configure_Controller extends FreshRSS_ActionController {
 			$share = $_POST['share'] ?? null;
 			if (is_array($share)) {
 				$share = array_filter($share, fn($value, $key): bool =>
-					is_string($key) && is_array($value) &&
+					is_int($key) && is_array($value) &&
 					is_array_values_string($value),
 					ARRAY_FILTER_USE_BOTH);
-				/** @var array<string,array<string,string>> $share */
+				/** @var array<int,array<string,string>> $share */
 				FreshRSS_Context::userConf()->sharing = $share;
 				FreshRSS_Context::userConf()->save();
 				invalidateHttpCache();

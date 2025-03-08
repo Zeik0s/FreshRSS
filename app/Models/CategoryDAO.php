@@ -265,7 +265,7 @@ SQL;
 			$aPosition = $a->attributeInt('position');
 			$bPosition = $b->attributeInt('position');
 			if ($aPosition === $bPosition) {
-				return ($a->name() < $b->name()) ? -1 : 1;
+				return strnatcasecmp($a->name(), $b->name());
 			} elseif (null === $aPosition) {
 				return 1;
 			} elseif (null === $bPosition) {
@@ -289,8 +289,7 @@ SQL;
 				. 'ORDER BY c.name, f.name';
 			$stm = $this->pdo->prepare($sql);
 			$values = [ ':priority' => FreshRSS_Feed::PRIORITY_CATEGORY ];
-			if ($stm !== false && $stm->execute($values)) {
-				$res = $stm->fetchAll(PDO::FETCH_ASSOC) ?: [];
+			if ($stm !== false && $stm->execute($values) && ($res = $stm->fetchAll(PDO::FETCH_ASSOC)) !== false) {
 				/** @var list<array{c_name:string,c_id:int,c_kind:int,c_last_update:int,c_error:int|bool,c_attributes?:string,
 				 * 	id?:int,name?:string,url?:string,kind?:int,category?:int,website?:string,priority?:int,error?:int|bool,attributes?:string,cache_nbEntries?:int,cache_nbUnreads?:int,ttl?:int}> $res */
 				return self::daoToCategoriesPrepopulated($res);

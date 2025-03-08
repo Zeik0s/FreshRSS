@@ -21,7 +21,7 @@ class FreshRSS_Themes extends Minz_Model {
 		$list = [];
 		foreach ($themes_list as $theme_dir) {
 			$theme = self::get_infos($theme_dir);
-			if (is_array($theme)) {
+			if (is_array($theme) && trim($theme['name']) !== '') {
 				$list[$theme_dir] = $theme;
 			}
 		}
@@ -92,14 +92,14 @@ class FreshRSS_Themes extends Minz_Model {
 	}
 
 	public static function title(string $name): string {
-		static $titles = [
+		$titles = [
 			'opml-dyn' => 'sub.category.dynamic_opml',
 		];
 		return $titles[$name] ?? '';
 	}
 
 	public static function alt(string $name): string {
-		static $alts = [
+		$alts = [
 			'add' => '➕',	//✚
 			'all' => '☰',
 			'bookmark-add' => '➕',	//✚
