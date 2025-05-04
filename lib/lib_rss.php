@@ -348,9 +348,10 @@ function customSimplePie(array $attributes = [], array $curl_options = []): \Sim
 	]);
 	$simplePie->rename_attributes(['id', 'class']);
 	$simplePie->strip_attributes(array_merge($simplePie->strip_attributes, [
-		'autoplay', 'class', 'onload', 'onunload', 'onclick', 'ondblclick', 'onmousedown', 'onmouseup',
+		'autoplay', 'class', 'form', 'formaction',
+		'onload', 'onunload', 'onclick', 'ondblclick', 'onmousedown', 'onmouseup',
 		'onmouseover', 'onmousemove', 'onmouseout', 'onfocus', 'onblur',
-		'onkeypress', 'onkeydown', 'onkeyup', 'onselect', 'onchange', 'seamless', 'sizes', 'srcset']));
+		'onkeypress', 'onkeydown', 'onkeyup', 'onselect', 'onchange', 'seamless', 'sizes', 'srcdoc', 'srcset']));
 	$simplePie->add_attributes([
 		'audio' => ['controls' => 'controls', 'preload' => 'none'],
 		'iframe' => [
@@ -567,7 +568,18 @@ function httpGet(string $url, string $cachePath, string $type = 'html', array $a
 
 	curl_setopt_array($ch, FreshRSS_Context::systemConf()->curl_options);
 
-	if (isset($attributes['curl_params']) && is_array($attributes['curl_params'])) {
+	if (is_array($attributes['curl_params'] ?? null)) {
+		$options = $attributes['curl_params'];
+		if (is_array($options[CURLOPT_HTTPHEADER] ?? null)) {
+			// Remove headers problematic for security
+			$options[CURLOPT_HTTPHEADER] = array_filter($options[CURLOPT_HTTPHEADER],
+				fn($header) => is_string($header) && !preg_match('/^(Remote-User|X-WebAuth-User)\\s*:/i', $header));
+			// Add Accept header if it is not set
+			if (preg_grep('/^Accept\\s*:/i', $options[CURLOPT_HTTPHEADER]) === false) {
+				$options[CURLOPT_HTTPHEADER][] = 'Accept: ' . $accept;
+			}
+			$attributes['curl_params'] = $options;
+		}
 		curl_setopt_array($ch, $attributes['curl_params']);
 	}
 
@@ -801,6 +813,12 @@ function checkTrustedIP(): bool {
 }
 
 function httpAuthUser(bool $onlyTrusted = true): string {
+	$auths = array_intersect_key($_SERVER, ['REMOTE_USER' => '', 'REDIRECT_REMOTE_USER' => '', 'HTTP_REMOTE_USER' => '', 'HTTP_X_WEBAUTH_USER' => '']);
+	if (count($auths) > 1) {
+		Minz_Log::warning('Multiple HTTP authentication headers!');
+		return '';
+	}
+
 	if (!empty($_SERVER['REMOTE_USER']) && is_string($_SERVER['REMOTE_USER'])) {
 		return $_SERVER['REMOTE_USER'];
 	}
@@ -904,6 +922,14 @@ function recursive_unlink(string $dir): bool {
 		return true;
 	}
 
+	if (is_link($dir)) {
+		if (PHP_OS_FAMILY === "Windows") {
+			return rmdir($dir);
+		}
+
+		return unlink($dir);
+	}
+
 	$files = array_diff(scandir($dir) ?: [], ['.', '..']);
 	foreach ($files as $filename) {
 		$filename = $dir . '/' . $filename;
@@ -981,6 +1007,7 @@ function errorMessageInfo(string $errorTitle, string $error = ''): string {
 	}
 
 	header("Content-Security-Policy: default-src 'self'");
+	header('Referrer-Policy: same-origin');
 
 	return <<<MSG
 	<!DOCTYPE html><html><header><title>HTTP 500: {$errorTitle}</title></header><body>

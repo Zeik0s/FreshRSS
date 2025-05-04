@@ -20,13 +20,12 @@ return array(
 				'browser' => 'Böngésző',
 				'database' => 'Adatbázis',
 				'server_software' => 'Szerver szoftver',
+				'version_curl' => 'cURL version',	// TODO
 				'version_frss' => 'FreshRSS verzió',
 				'version_php' => 'PHP verzió',
 			),
 		),
 		'bugs_reports' => 'Hiba jelentések',
-		'credits' => 'Credits',	// IGNORE
-		'credits_content' => 'Néhány dizájn elem a <a href="http://twitter.github.io/bootstrap/">Bootstrap</a> segítségével működik, habár a FreshRSS nem használja ezt a framework-öt. Az <a href="https://gitlab.gnome.org/Archive/gnome-icon-theme-symbolic">Ikonok</a> a <a href="https://www.gnome.org/">GNOME projekt-ből származnak</a>. <em>Open Sans</em> betűtípust készítette <a href="https://fonts.google.com/specimen/Open+Sans">Steve Matteson</a>. A FreshRSS a <a href="https://framagit.org/marienfressinaud/MINZ">Minz</a> PHP keretrendszeren alapul.',
 		'documentation' => 'Dokumentáció',
 		'freshrss_description' => 'A FreshRSS egy saját magunk által host-olható RSS hírgyűjtő és olvasó. Lehetővé teszi hogy kövess és olvass sok híroldalt egy pillantás alatt anélkül hogy mindegyiket meglátogatnád egyesével. A FreshRSS könnyű, gyors, jól konfigurálható, és könnyen használható.',
 		'github' => '<a href="https://github.com/FreshRSS/FreshRSS/issues">GitHub-on</a>',

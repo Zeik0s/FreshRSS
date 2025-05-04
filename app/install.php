@@ -5,6 +5,7 @@ if (function_exists('opcache_reset')) {
 	opcache_reset();
 }
 header("Content-Security-Policy: default-src 'self'");
+header('Referrer-Policy: same-origin');
 
 require(LIB_PATH . '/lib_install.php');
 
@@ -462,7 +463,7 @@ function printStep1(): void {
 	printStep1Template('pdo', $res['pdo']);
 	$curlVersion = function_exists('curl_version') ? curl_version() : [];
 	$curlVersion = is_string($curlVersion['version'] ?? null) ? $curlVersion['version'] : '';
-	printStep1Template('curl', $res['curl'], [$curlVersion]);
+	printStep1Template('curl', $res['curl'], [$curlVersion]);	// TODO: We actually require cURL >= 7.52 for CURLPROXY_HTTPS
 	printStep1Template('json', $res['json']);
 	printStep1Template('pcre', $res['pcre']);
 	printStep1Template('ctype', $res['ctype']);

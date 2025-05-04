@@ -99,6 +99,12 @@ return array(
 			'previous' => 'Precedente',
 		),
 	),
+	'mark_read_button' => array(
+		'_' => 'pulsante “segna tutto come letto”',
+		'big' => 'Grande',
+		'none' => 'Nessuno',
+		'small' => 'Piccolo',
+	),
 	'privacy' => array(
 		'_' => 'Privacy',	// IGNORE
 		'retrieve_extension_list' => 'Recupero dell’elenco delle estensioni',

@@ -749,6 +749,7 @@
 				<label class="group-name" for="proxy_type"><?= _t('sub.feed.proxy') ?></label>
 				<div class="group-controls">
 					<select name="proxy_type" id="proxy_type"><?php
+						defined('CURLPROXY_HTTPS') or define('CURLPROXY_HTTPS', 2);	// Compatibility cURL 7.51
 						$type = $curlParams[CURLOPT_PROXYTYPE] ?? '';
 						if ($type === 3) {	// Legacy for NONE
 							$type = -1;
@@ -822,6 +823,9 @@
 							$httpHeaders = [];
 						}
 						$httpHeaders = array_filter($httpHeaders, 'is_string');
+						// Remove headers problematic for security
+						$httpHeaders = array_filter($httpHeaders,
+							fn(string $header) => !preg_match('/^(Remote-User|X-WebAuth-User)\\s*:/i', $header));
 					?>
 					<textarea class="valid-json" id="http_headers" name="http_headers" rows="3" cols="64" spellcheck="false"><?php
 						foreach ($httpHeaders as $header) {
