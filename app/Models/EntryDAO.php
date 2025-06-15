@@ -43,7 +43,7 @@ class FreshRSS_EntryDAO extends Minz_ModelPdo {
 	protected static function sqlRegex(string $expression, string $regex, array &$values): string {
 		// The implementation of this function is solely for MySQL and MariaDB
 		static $databaseDAOMySQL = null;
-		if ($databaseDAOMySQL === null) {
+		if (!($databaseDAOMySQL instanceof FreshRSS_DatabaseDAO)) {
 			$databaseDAOMySQL = new FreshRSS_DatabaseDAO();
 		}
 
@@ -205,6 +205,8 @@ SQL;
 			return true;
 		} else {
 			$info = $this->addEntryPrepared == false ? $this->pdo->errorInfo() : $this->addEntryPrepared->errorInfo();
+			/** @var array{id:string,guid:string,title:string,author:string,content:string,link:string,date:int,lastSeen:int,hash:string,
+			 * 	is_read:bool|int|null,is_favorite:bool|int|null,id_feed:int,tags:string,attributes?:null|string|array<string,mixed>} $valuesTmp */
 			/** @var array{0:string,1:int,2:string} $info */
 			if ($this->autoUpdateDb($info)) {
 				$this->addEntryPrepared = null;
@@ -315,6 +317,8 @@ SQL;
 			return true;
 		} else {
 			$info = $this->updateEntryPrepared == false ? $this->pdo->errorInfo() : $this->updateEntryPrepared->errorInfo();
+			/** @var array{id:string,guid:string,title:string,author:string,content:string,link:string,date:int,lastSeen:int,hash:string,
+			 * 	is_read:bool|int|null,is_favorite:bool|int|null,id_feed:int,tags:string,attributes:array<string,mixed>} $valuesTmp */
 			/** @var array{0:string,1:int,2:string} $info */
 			if ($this->autoUpdateDb($info)) {
 				return $this->updateEntry($valuesTmp);
@@ -493,7 +497,7 @@ SQL;
 		?FreshRSS_BooleanSearch $filters = null, int $state = 0, bool $is_read = true) {
 		FreshRSS_UserDAO::touch();
 		if ($idMax == '0') {
-			$idMax = time() . '000000';
+			$idMax = uTimeString();
 			Minz_Log::debug('Calling markReadEntries(0) is deprecated!');
 		}
 
@@ -544,7 +548,7 @@ SQL;
 	public function markReadCat(int $id, string $idMax = '0', ?FreshRSS_BooleanSearch $filters = null, int $state = 0, bool $is_read = true): int|false {
 		FreshRSS_UserDAO::touch();
 		if ($idMax == '0') {
-			$idMax = time() . '000000';
+			$idMax = uTimeString();
 			Minz_Log::debug('Calling markReadCat(0) is deprecated!');
 		}
 
@@ -585,7 +589,7 @@ SQL;
 	public function markReadFeed(int $id_feed, string $idMax = '0', ?FreshRSS_BooleanSearch $filters = null, int $state = 0, bool $is_read = true): int|false {
 		FreshRSS_UserDAO::touch();
 		if ($idMax == '0') {
-			$idMax = time() . '000000';
+			$idMax = uTimeString();
 			Minz_Log::debug('Calling markReadFeed(0) is deprecated!');
 		}
 		$hadTransaction = $this->pdo->inTransaction();
@@ -640,7 +644,7 @@ SQL;
 		int $state = 0, bool $is_read = true) {
 		FreshRSS_UserDAO::touch();
 		if ($idMax == '0') {
-			$idMax = time() . '000000';
+			$idMax = uTimeString();
 			Minz_Log::debug('Calling markReadTag(0) is deprecated!');
 		}
 
@@ -1318,7 +1322,9 @@ SQL;
 
 		return [array_merge($values, $searchValues), 'SELECT '
 			. ($type === 'T' ? 'DISTINCT ' : '')
-			. 'e.id FROM `_entry` e '
+			. 'e.id'
+			. ($type === 'T' && $orderBy !== 'e.id' ? ', ' . $orderBy : '') // SELECT DISTINCT, ORDER BY expressions must appear in SELECT
+			. ' FROM `_entry` e '
 			. 'INNER JOIN `_feed` f ON e.id_feed = f.id '
 			. ($type === 't' || $type === 'T' ? 'INNER JOIN `_entrytag` et ON et.id_entry = e.id ' : '')
 			. 'WHERE ' . $where
@@ -1459,7 +1465,9 @@ SQL;
 		[$values, $sql] = $this->sqlListWhere($type, $id, $state, $filters, id_min: $id_min, id_max: $id_max, order: $order,
 			continuation_id: $continuation_id, continuation_value: $continuation_value, limit: $limit, offset: $offset);
 		$stm = $this->pdo->prepare($sql);
-		if ($stm !== false && $stm->execute($values) && ($res = $stm->fetchAll(PDO::FETCH_COLUMN, 0)) !== false) {
+		if ($stm !== false && $stm->execute($values)) {
+			/** @var list<int|numeric-string> $res */
+			$res = $stm->fetchAll(PDO::FETCH_COLUMN, 0);
 			$res = array_map('strval', $res);
 			/** @var list<numeric-string> $res */
 			return $res;
@@ -1494,6 +1502,7 @@ SQL;
 		if ($stm !== false && $stm->execute($values)) {
 			$rows = $stm->fetchAll(PDO::FETCH_ASSOC);
 			foreach ($rows as $row) {
+				/** @var array{guid:string,hex_hash:string} $row */
 				$result[$row['guid']] = $row['hex_hash'];
 			}
 			return $result;
