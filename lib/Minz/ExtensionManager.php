@@ -26,9 +26,21 @@ final class Minz_ExtensionManager {
 			'list' => [],
 			'signature' => 'NoneToNone',
 		],
+		'before_login_btn' => [ // function(): string
+			'list'  => [],
+			'signature' => 'NoneToString',
+		],
 		'check_url_before_add' => [	// function($url) -> Url | null
 			'list' => [],
 			'signature' => 'OneToOne',
+		],
+		'custom_favicon_btn_url' => [ // function(FreshRSS_Feed $feed): string | null
+			'list' => [],
+			'signature' => 'PassArguments',
+		],
+		'custom_favicon_hash' => [ // function(FreshRSS_Feed $feed): string | null
+			'list' => [],
+			'signature' => 'PassArguments',
 		],
 		'entries_favorite' => [	// function(array $ids, bool $is_favorite): void
 			'list' => [],
@@ -102,6 +114,10 @@ final class Minz_ExtensionManager {
 			'list' => [],
 			'signature' => 'PassArguments',
 		],
+		'view_modes' => [	// function($viewModes = array) -> array | null
+			'list' => [],
+			'signature' => 'OneToOne',
+		],
 	];
 
 	/** Remove extensions and hooks from a previous initialisation */
@@ -143,7 +159,10 @@ final class Minz_ExtensionManager {
 		$list_potential_extensions = array_merge($list_core_extensions, $list_thirdparty_extensions);
 
 		$system_conf = Minz_Configuration::get('system');
-		self::$ext_auto_enabled = $system_conf->extensions_enabled;
+		self::$ext_auto_enabled = array_filter(
+			$system_conf->attributeArray('extensions_enabled') ?? [],
+			fn($value, $key): bool => is_string($key) && is_bool($value),
+			ARRAY_FILTER_USE_BOTH);
 
 		foreach ($list_potential_extensions as $ext_pathname) {
 			if (!is_dir($ext_pathname)) {
@@ -362,7 +381,10 @@ final class Minz_ExtensionManager {
 			return self::callOneToOne($hook_name, $args[0] ?? null);
 		} elseif ($signature === 'PassArguments') {
 			foreach (self::$hook_list[$hook_name]['list'] as $function) {
-				call_user_func($function, ...$args);
+				$result = call_user_func($function, ...$args);
+				if ($result !== null) {
+					return $result;
+				}
 			}
 		} elseif ($signature === 'NoneToString') {
 			return self::callHookString($hook_name);
@@ -446,5 +468,14 @@ final class Minz_ExtensionManager {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Check if a extension is enabled
+	 *
+	 * @param string $ext_name is the extension's name as provided in metadata.json
+	 */
+	public static function isExtensionEnabled(string $ext_name): bool {
+		return isset(self::$ext_list_enabled[$ext_name]);
 	}
 }
