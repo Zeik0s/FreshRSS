@@ -80,6 +80,7 @@ return array(
 		'filteractions' => array(
 			'_' => 'Filteraktionen',
 			'help' => 'Ein Suchfilter pro Zeile. Operatoren <a href="https://freshrss.github.io/FreshRSS/en/users/10_filter.html#with-the-search-field" target="_blank">siehe Dokumentation</a>.',
+			'view_filter' => 'Preview filters on existing articles (new window)',	// TODO
 		),
 		'http_headers' => 'HTTP Headers',	// IGNORE
 		'http_headers_help' => 'Headers werden durch einen Zeilenumbruch getrennt. Name und Wert des Headers werden per Doppelpunkt getrennt (z.B: <kbd><code>Accept: application/atom+xml<br />Authorization: Bearer some-token</code></kbd>).',
@@ -210,6 +211,7 @@ return array(
 		'priority' => array(
 			'_' => 'Sichtbarkeit',
 			'category' => 'Zeige in eigener Kategorie',
+			'feed' => 'Show in its feed',	// TODO
 			'hidden' => 'Nicht anzeigen',
 			'important' => 'Zeige in "Wichtige Feeds"',
 			'main_stream' => 'In Haupt-Feeds zeigen',
@@ -237,7 +239,7 @@ return array(
 		'ttl' => 'Aktualisiere automatisch nicht öfter als',
 		'unicityCriteria' => array(
 			'_' => 'Einzigartigkeit eines Artikels',
-			'forced' => '<span title="Einzigartikkeit-Einstellungen blockieren, selbst wenn der Feed Duplikat-Artikel hat">Erzwingen</span>',
+			'forced' => '<span title="Einzigartigkeit-Einstellungen blockieren, selbst wenn der Feed Duplikat-Artikel hat">Erzwingen</span>',
 			'help' => 'Relevant für defekte Feeds.<br />⚠️ Änderungen werden Duplikate erzeugen.',
 			'id' => 'Standard ID (Standardeinstellung)',
 			'link' => 'Link',	// IGNORE
@@ -281,6 +283,7 @@ return array(
 			'idle' => 'Inaktive Feeds',
 			'main' => 'Haupt-Statistiken',
 			'repartition' => 'Artikel-Verteilung',
+			'unread_dates' => 'Unread dates',	// TODO
 		),
 		'subscription_management' => 'Abonnementverwaltung',
 		'subscription_tools' => 'Abonnement-Tools',

@@ -177,6 +177,15 @@ class FreshRSS_Import_Service {
 					break;
 			}
 
+			$feed->_priority(match (strtolower($feed_elt['frss:priority'] ?? '')) {
+				FreshRSS_Export_Service::PRIORITY_IMPORTANT => FreshRSS_Feed::PRIORITY_IMPORTANT,
+				FreshRSS_Export_Service::PRIORITY_MAIN_STREAM => FreshRSS_Feed::PRIORITY_MAIN_STREAM,
+				FreshRSS_Export_Service::PRIORITY_CATEGORY => FreshRSS_Feed::PRIORITY_CATEGORY,
+				FreshRSS_Export_Service::PRIORITY_FEED => FreshRSS_Feed::PRIORITY_FEED,
+				FreshRSS_Export_Service::PRIORITY_HIDDEN => FreshRSS_Feed::PRIORITY_HIDDEN,
+				default => FreshRSS_Feed::PRIORITY_MAIN_STREAM,
+			});
+
 			if (isset($feed_elt['frss:cssFullContent'])) {
 				$feed->_pathEntries(Minz_Helper::htmlspecialchars_utf8($feed_elt['frss:cssFullContent']));
 			}
@@ -311,7 +320,7 @@ class FreshRSS_Import_Service {
 
 			// Call the extension hook
 			/** @var FreshRSS_Feed|null */
-			$feed = Minz_ExtensionManager::callHook('feed_before_insert', $feed);
+			$feed = Minz_ExtensionManager::callHook(Minz_HookType::FeedBeforeInsert, $feed);
 
 			if ($dry_run) {
 				if ($feed !== null) {
