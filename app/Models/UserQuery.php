@@ -123,7 +123,7 @@ class FreshRSS_UserQuery {
 			'get' => $this->get,
 			'name' => $this->name,
 			'order' => $this->order,
-			'search' => $this->search->getRawInput(),
+			'search' => $this->search->__toString(),
 			'state' => $this->state,
 			'url' => $this->url,
 			'token' => $this->token,
@@ -221,7 +221,7 @@ class FreshRSS_UserQuery {
 	 * Check if there is a search in the search object
 	 */
 	public function hasSearch(): bool {
-		return $this->search->getRawInput() !== '';
+		return $this->search->__toString() !== '';
 	}
 
 	public function getGet(): string {
@@ -349,5 +349,23 @@ class FreshRSS_UserQuery {
 
 	public function setImageUrl(string $imageUrl): void {
 		$this->imageUrl = $imageUrl;
+	}
+
+	/**
+	 * Remove queries where $get is appearing.
+	 * @param string $get the get attribute which should be removed.
+	 * @param array<int,array{get?:string,name?:string,order?:string,search?:string,state?:int,url?:string,token?:string,
+	 * 	shareRss?:bool,shareOpml?:bool,description?:string,imageUrl?:string}> $queries an array of queries.
+	 * @return array<int,array{get?:string,name?:string,order?:string,search?:string,state?:int,url?:string,token?:string,
+	 * 	shareRss?:bool,shareOpml?:bool,description?:string,imageUrl?:string}> without queries where $get is appearing.
+	 */
+	public static function remove_query_by_get(string $get, array $queries): array {
+		$final_queries = [];
+		foreach ($queries as $query) {
+			if (empty($query['get']) || $query['get'] !== $get) {
+				$final_queries[] = $query;
+			}
+		}
+		return $final_queries;
 	}
 }
