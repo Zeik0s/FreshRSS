@@ -54,6 +54,8 @@ return array(
 			'timeout' => 'HTML5 bildirim zaman aşımı',
 		),
 		'show_nav_buttons' => 'Gezinme düğmelerini göster',
+		'show_title_unread' => 'Başlıkta okunmamış makale sayısını göster',
+		'sidebar_hidden_by_default' => 'Hide sidebar by default',	// TODO
 		'theme' => array(
 			'_' => 'Tema',
 			'deprecated' => array(
@@ -105,6 +107,9 @@ return array(
 		'none' => 'Yok',
 		'small' => 'Küçük',
 	),
+	'notification' => array(
+		'html5_enable_notif' => 'Enable notification',	// TODO
+	),
 	'notification_timeout' => array(
 		'bad' => array(
 			'label' => 'Show warning banner',	// TODO
@@ -118,6 +123,7 @@ return array(
 	'privacy' => array(
 		'_' => 'Gizlilik',
 		'retrieve_extension_list' => 'Eklenti listesini al',
+		'send_referrer_allowlist' => 'Sites allowed to see your server address (%s)',	// TODO
 	),
 	'profile' => array(
 		'_' => 'Profil yönetimi',
@@ -145,6 +151,7 @@ return array(
 	),
 	'query' => array(
 		'_' => 'Kullanıcı sorguları',
+		'create' => 'Create new user query',	// TODO
 		'deprecated' => 'Bu sorgu artık geçerli değil. İlgili kategori veya besleme silinmiş.',
 		'description' => 'Açıklama',
 		'filter' => array(
@@ -275,6 +282,7 @@ return array(
 			'upon_gone' => 'artık上游 haber akışında olmadığında',
 			'upon_reception' => 'makale alındığında',
 			'when' => 'Bir makaleyi okundu olarak işaretle…',
+			'when_same_guid_in_category' => 'if an identical GUID already exists in the top <i>n</i> newest articles of the category',	// TODO
 			'when_same_title_in_category' => 'eğer aynı başlık kategorideki en yeni <i>n</i> makalede zaten varsa',
 			'when_same_title_in_feed' => 'eğer aynı başlık beslemedeki en yeni <i>n</i> makalede zaten varsa',
 		),
@@ -291,11 +299,6 @@ return array(
 		),
 		'show_fav_unread_help' => 'Etiketler için de geçerlidir',
 		'sides_close_article' => 'Makale metin alanının dışına tıklayınca makaleyi kapat',
-		'sort' => array(
-			'_' => 'Sıralama düzeni',
-			'newer_first' => 'Önce yeniler',
-			'older_first' => 'Önce eskiler',
-		),
 		'star' => array(
 			'when' => 'Bir makaleyi favori olarak işaretle…',
 		),
@@ -324,7 +327,7 @@ return array(
 		'share_name' => 'Görüntülenecek paylaşım adı',
 		'share_url' => 'Kullanılacak paylaşım URL’si',
 		'title' => 'Paylaşım',
-		'twitter' => 'Twitter',	// IGNORE
+		'twitter' => 'X (Twitter)',	// IGNORE
 		'wallabag' => 'wallabag',	// IGNORE
 	),
 	'shortcut' => array(

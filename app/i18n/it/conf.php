@@ -54,6 +54,8 @@ return array(
 			'timeout' => 'Notifica timeout HTML5',
 		),
 		'show_nav_buttons' => 'Mostra i pulsanti di navigazione',
+		'show_title_unread' => 'Mostra il numero di articoli non letti nel titolo',
+		'sidebar_hidden_by_default' => 'Nascondi la barra laterale di default',
 		'theme' => array(
 			'_' => 'Tema',
 			'deprecated' => array(
@@ -105,6 +107,9 @@ return array(
 		'none' => 'Nessuno',
 		'small' => 'Piccolo',
 	),
+	'notification' => array(
+		'html5_enable_notif' => 'Abilita notifiche',
+	),
 	'notification_timeout' => array(
 		'bad' => array(
 			'label' => 'Mostra banner con le segnalazioni',
@@ -118,6 +123,7 @@ return array(
 	'privacy' => array(
 		'_' => 'Privacy',	// IGNORE
 		'retrieve_extension_list' => 'Recupero dell’elenco delle estensioni',
+		'send_referrer_allowlist' => 'Sites allowed to see your server address (%s)',	// TODO
 	),
 	'profile' => array(
 		'_' => 'Gestione profili',
@@ -145,6 +151,7 @@ return array(
 	),
 	'query' => array(
 		'_' => 'Ricerche personali',
+		'create' => 'Create new user query',	// TODO
 		'deprecated' => 'Questa query non è più valida. La categoria o il feed di riferimento non stati cancellati.',
 		'description' => 'Descrizione',
 		'filter' => array(
@@ -275,6 +282,7 @@ return array(
 			'upon_gone' => 'quando non si trova più nel feed di notizie in alto',
 			'upon_reception' => 'Alla ricezione del contenuto',
 			'when' => 'Segna articoli come letti…',
+			'when_same_guid_in_category' => 'if an identical GUID already exists in the top <i>n</i> newest articles of the category',	// TODO
 			'when_same_title_in_category' => 'se un titolo identico esiste già nei primi <i>n</i> articoli più recenti della categoria',
 			'when_same_title_in_feed' => 'se un titolo identico esiste già tra i <i>n</i> articoli più recenti (del feed)',
 		),
@@ -291,11 +299,6 @@ return array(
 		),
 		'show_fav_unread_help' => 'Si applica anche alle etichette',
 		'sides_close_article' => 'Cliccare fuori dall’area di testo dell’articolo chiude l’articolo',
-		'sort' => array(
-			'_' => 'Ordinamento',
-			'newer_first' => 'Prima i più recenti',
-			'older_first' => 'Prima i più vecchi',
-		),
 		'star' => array(
 			'when' => 'Segna un articolo come preferito…',
 		),
@@ -324,7 +327,7 @@ return array(
 		'share_name' => 'Nome condivisione',
 		'share_url' => 'URL condivisione',
 		'title' => 'Condividi',
-		'twitter' => 'Twitter',	// IGNORE
+		'twitter' => 'X (Twitter)',	// IGNORE
 		'wallabag' => 'wallabag',	// IGNORE
 	),
 	'shortcut' => array(
@@ -359,7 +362,7 @@ return array(
 		'skip_next_article' => 'Evidenzia il prossimo senza aprire',
 		'skip_previous_article' => 'Evidenzia il precedente senza aprire',
 		'title' => 'Comandi da tastiera',
-		'toggle_aside' => 'Toggle sidebar',	// TODO
+		'toggle_aside' => 'Mostra/nascondi la barra laterale',
 		'toggle_media' => 'Riproduci/Metti in pausa i media',
 		'user_filter' => 'Accedi alle ricerche personali',
 		'user_filter_help' => 'Se è presente una sola ricerca personale verrà usata quella, altrimenti usare anche il numero associato.',

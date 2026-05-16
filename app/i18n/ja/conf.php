@@ -54,6 +54,8 @@ return array(
 			'timeout' => 'HTML5 の通知タイムアウト時間',
 		),
 		'show_nav_buttons' => 'ナビゲーションボタンを表示する',
+		'show_title_unread' => 'タイトルに未読の記事数を表示',
+		'sidebar_hidden_by_default' => 'Hide sidebar by default',	// TODO
 		'theme' => array(
 			'_' => 'テーマ',
 			'deprecated' => array(
@@ -105,6 +107,9 @@ return array(
 		'none' => 'None',	// TODO
 		'small' => 'Small',	// TODO
 	),
+	'notification' => array(
+		'html5_enable_notif' => 'Enable notification',	// TODO
+	),
 	'notification_timeout' => array(
 		'bad' => array(
 			'label' => 'Show warning banner',	// TODO
@@ -118,6 +123,7 @@ return array(
 	'privacy' => array(
 		'_' => 'プライバシー',
 		'retrieve_extension_list' => '拡張機能リストを取得する',
+		'send_referrer_allowlist' => 'Sites allowed to see your server address (%s)',	// TODO
 	),
 	'profile' => array(
 		'_' => 'プロフィール',
@@ -145,6 +151,7 @@ return array(
 	),
 	'query' => array(
 		'_' => 'ユーザークエリ',
+		'create' => 'Create new user query',	// TODO
 		'deprecated' => 'このクエリは有効ではありません。参照されているカテゴリやフィードはすでに消去されました。',
 		'description' => '説明',
 		'filter' => array(
@@ -275,6 +282,7 @@ return array(
 			'upon_gone' => 'ニュースフィードの提供元がなくなったとき',
 			'upon_reception' => '記事を受け取ったとき',
 			'when' => '記事を既読にする…',
+			'when_same_guid_in_category' => 'if an identical GUID already exists in the top <i>n</i> newest articles of the category',	// TODO
 			'when_same_title_in_category' => 'すでに同一タイトルがカテゴリ内上位<i>n</i>件の最新記事に存在するとき',
 			'when_same_title_in_feed' => 'すでに同一タイトルがフィード内上位<i>n</i>件の最新記事に存在するとき',
 		),
@@ -291,11 +299,6 @@ return array(
 		),
 		'show_fav_unread_help' => 'ラベルも適用する',
 		'sides_close_article' => '記事の外をクリックすると記事を閉じるようにする',
-		'sort' => array(
-			'_' => '順序',
-			'newer_first' => '最新のものを先頭にする',
-			'older_first' => '最古のものを先頭にする',
-		),
 		'star' => array(
 			'when' => '記事をお気に入りに登録する。',
 		),
@@ -324,7 +327,7 @@ return array(
 		'share_name' => '共有する方法',
 		'share_url' => 'URLを共有する',
 		'title' => '共有',
-		'twitter' => 'Twitter',	// IGNORE
+		'twitter' => 'X (Twitter)',	// IGNORE
 		'wallabag' => 'wallabag',	// IGNORE
 	),
 	'shortcut' => array(

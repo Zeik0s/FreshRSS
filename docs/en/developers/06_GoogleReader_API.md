@@ -1,4 +1,4 @@
-# FreshRSS - Google Reader compatible API implementation
+# Google Reader compatible API implementation
 
 See [Mobile access](../users/06_Mobile_access.md) for general aspects of API access.
 
@@ -89,7 +89,7 @@ curl -H "Authorization:GoogleLogin auth=alice/8e6845e089457af25303abc6f53356eb60
 * [FeedHQ](https://feedhq.readthedocs.io/en/latest/api/index.html)
 * [Inoreader](https://www.inoreader.com/developers/)
 * [The Old Reader](https://github.com/theoldreader/api)
-* [pyrfeed](http://code.google.com/p/pyrfeed/wiki/GoogleReaderAPI)
+* [pyrfeed](https://code.google.com/archive/p/pyrfeed/wikis/GoogleReaderAPI.wiki)
 * [BazQux](https://github.com/bazqux/bazqux-api)
 
 ### Synchronisation strategy

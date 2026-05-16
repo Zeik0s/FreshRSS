@@ -171,6 +171,13 @@ class FreshRSS_Category extends Minz_Model {
 		$this->sortFeeds();
 	}
 
+	public function defaultSort(): ?string {
+		return $this->attributeString('defaultSort');
+	}
+	public function defaultOrder(): ?string {
+		return $this->attributeString('defaultOrder');
+	}
+
 	/**
 	 * To manually add feeds to this category (not committing to database).
 	 */
@@ -215,6 +222,9 @@ class FreshRSS_Category extends Minz_Model {
 			$importService->importOpml($opml, $dryRunCategory, true);
 			if ($importService->lastStatus()) {
 				$feedDAO = FreshRSS_Factory::createFeedDao();
+				$limits = FreshRSS_Context::systemConf()->limits;
+				$maxFeeds = (int)($limits['max_feeds'] ?? 0);
+				$nbFeeds = $maxFeeds > 0 ? $feedDAO->count() : 0;
 
 				/** @var array<string,FreshRSS_Feed> */
 				$dryRunFeeds = [];
@@ -238,8 +248,19 @@ class FreshRSS_Category extends Minz_Model {
 				foreach ($dryRunCategory->feeds() as $dryRunFeed) {
 					if (empty($existingFeeds[$dryRunFeed->url()])) {
 						// The feed does not exist in the current category, so add that feed
+						if ($maxFeeds > 0 && $nbFeeds >= $maxFeeds) {
+							// Respect the per-user maximum number of feeds
+							Minz_Log::warning(_t('feedback.sub.feed.over_max', $maxFeeds) .
+								' (dynamic OPML category ' . $this->id() . ')');
+							$ok = false;
+							break;
+						}
 						$dryRunFeed->_category($this);
-						$ok &= ($feedDAO->addFeedObject($dryRunFeed) !== false);
+						if ($feedDAO->addFeedObject($dryRunFeed) === false) {
+							$ok = false;
+						} else {
+							$nbFeeds++;
+						}
 						$existingFeeds[$dryRunFeed->url()] = $dryRunFeed;
 					} else {
 						$existingFeed = $existingFeeds[$dryRunFeed->url()];
@@ -260,7 +281,11 @@ class FreshRSS_Category extends Minz_Model {
 		}
 
 		$catDAO = FreshRSS_Factory::createCategoryDao();
-		$catDAO->updateLastUpdate($this->id(), !$ok);
+		if ($ok) {
+			$catDAO->updateLastUpdate($this->id());
+		} else {
+			$catDAO->updateLastError($this->id());
+		}
 
 		return (bool)$ok;
 	}

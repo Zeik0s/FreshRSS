@@ -29,6 +29,7 @@ return array(
 			'help' => 'Щоб динамічно заповнювати цю категорію стрічками, вкажіть URL-адресу <a href="http://opml.org/" target="_blank">OPML-файлу</a>',
 		),
 		'empty' => 'Порожня категорія',
+		'error' => 'This dynamic OPML category has encountered a problem. Check that the OPML URL is still reachable and that the maximum number of feeds per user has not been exceeded.',	// TODO
 		'expand' => 'Розгорнути категорію',
 		'information' => 'Інформація',
 		'open' => 'Відкрити категорію',
@@ -86,6 +87,7 @@ return array(
 		'http_headers_help' => 'По заголовку на рядок. Назву й значення відокремлено двокрапкою (наприклад, <kbd><code>Accept: application/atom+xml<br />Authorization: Bearer деякий-токен</code></kbd>).',
 		'icon' => 'Піктограма',
 		'information' => 'Інформація',
+		'keep_adding_feed' => 'Then add more feeds',	// TODO
 		'keep_min' => 'Мінімум збережених статей',
 		'kind' => array(
 			'_' => 'Тип джерела стрічки',
@@ -185,6 +187,10 @@ return array(
 			'rss' => 'RSS/Atom (типово)',
 			'xml_xpath' => 'XML + XPath',	// IGNORE
 		),
+		'last-entry-publication-date' => 'Last article published <time datetime="%1$s" title="%1$s">%2$s</time>.',	// TODO
+		'last-entry-received-date' => 'Last article received <time datetime="%1$s" title="%1$s">%2$s</time>.',	// TODO
+		'last-error-date' => 'Last erroneous update <time datetime="%1$s" title="%1$s">%2$s</time>.',	// TODO
+		'last-update' => 'Last successful update <time datetime="%1$s" title="%1$s">%2$s</time>.',	// TODO
 		'maintenance' => array(
 			'clear_cache' => 'Очистити кеш',
 			'clear_cache_help' => 'Спорожнити кеш стрічки.',

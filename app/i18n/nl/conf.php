@@ -54,6 +54,8 @@ return array(
 			'timeout' => 'HTML5 notificatie stop',
 		),
 		'show_nav_buttons' => 'Toon navigatieknoppen',
+		'show_title_unread' => 'Aantal ongelezen artikelen in de titel weergeven',
+		'sidebar_hidden_by_default' => 'Hide sidebar by default',	// TODO
 		'theme' => array(
 			'_' => 'Thema',
 			'deprecated' => array(
@@ -105,6 +107,9 @@ return array(
 		'none' => 'Geen',
 		'small' => 'Klein',
 	),
+	'notification' => array(
+		'html5_enable_notif' => 'Enable notification',	// TODO
+	),
 	'notification_timeout' => array(
 		'bad' => array(
 			'label' => 'Waarschuwingsbalk tonen',
@@ -118,6 +123,7 @@ return array(
 	'privacy' => array(
 		'_' => 'Privacy',	// IGNORE
 		'retrieve_extension_list' => 'Extensielijst ophalen',
+		'send_referrer_allowlist' => 'Sites allowed to see your server address (%s)',	// TODO
 	),
 	'profile' => array(
 		'_' => 'Profielbeheer',
@@ -145,6 +151,7 @@ return array(
 	),
 	'query' => array(
 		'_' => 'Gebruikersquery’s (informatie aanvragen)',
+		'create' => 'Create new user query',	// TODO
 		'deprecated' => 'Deze query (informatie aanvraag) is niet langer geldig. De bedoelde categorie of feed is al verwijderd.',
 		'description' => 'Beschrijving',
 		'filter' => array(
@@ -275,6 +282,7 @@ return array(
 			'upon_gone' => 'als het niet langer in de nieuwsfeed staat',
 			'upon_reception' => 'bij ontvangst van het artikel',
 			'when' => 'Markeer artikel als gelezen…',
+			'when_same_guid_in_category' => 'if an identical GUID already exists in the top <i>n</i> newest articles of the category',	// TODO
 			'when_same_title_in_category' => 'als een identieke titel al voorkomt in de top <i>n</i> nieuwste artikelen van de categorie',
 			'when_same_title_in_feed' => 'als een zelfde titel al voorkomt in de top <i>n</i> nieuwste artikelen (of the feed)',	// DIRTY
 		),
@@ -291,11 +299,6 @@ return array(
 		),
 		'show_fav_unread_help' => 'Ook toepassen op labels',
 		'sides_close_article' => 'Sluit het artikel door buiten de artikeltekst te klikken',
-		'sort' => array(
-			'_' => 'Sorteer volgorde',
-			'newer_first' => 'Nieuwste eerst',
-			'older_first' => 'Oudste eerst',
-		),
 		'star' => array(
 			'when' => 'Markeer een artikel als favoriet…',
 		),
@@ -324,7 +327,7 @@ return array(
 		'share_name' => 'Gedeelde naam om weer te geven',
 		'share_url' => 'Deel URL voor gebruik',
 		'title' => 'Delen',
-		'twitter' => 'Twitter',	// IGNORE
+		'twitter' => 'X (Twitter)',	// IGNORE
 		'wallabag' => 'wallabag',	// IGNORE
 	),
 	'shortcut' => array(

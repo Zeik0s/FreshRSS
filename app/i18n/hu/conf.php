@@ -54,6 +54,8 @@ return array(
 			'timeout' => 'HTML5 értesítés hossza',
 		),
 		'show_nav_buttons' => 'Navigációs gombok megjelenítése',
+		'show_title_unread' => 'A meg nem nyitott cikkek számának megjelenítése a címben',
+		'sidebar_hidden_by_default' => 'Hide sidebar by default',	// TODO
 		'theme' => array(
 			'_' => 'Téma',
 			'deprecated' => array(
@@ -105,6 +107,9 @@ return array(
 		'none' => 'Egyik sem',
 		'small' => 'Kicsi',
 	),
+	'notification' => array(
+		'html5_enable_notif' => 'Enable notification',	// TODO
+	),
 	'notification_timeout' => array(
 		'bad' => array(
 			'label' => 'Figyelmeztető sáv megjelenítése',
@@ -118,6 +123,7 @@ return array(
 	'privacy' => array(
 		'_' => 'Adatvédelem',
 		'retrieve_extension_list' => 'Kiterjesztés lista beszerzése',
+		'send_referrer_allowlist' => 'Sites allowed to see your server address (%s)',	// TODO
 	),
 	'profile' => array(
 		'_' => 'Profil kezelés',
@@ -145,6 +151,7 @@ return array(
 	),
 	'query' => array(
 		'_' => 'Felhasználói lekérdezések',
+		'create' => 'Create new user query',	// TODO
 		'deprecated' => 'Ez a lekérdezés már nem érvényes. A hivatkozott kategória vagy hírforrás törölve lett.',
 		'description' => 'Leírás',
 		'filter' => array(
@@ -275,6 +282,7 @@ return array(
 			'upon_gone' => 'ha már nincs benne a hírforrásban',
 			'upon_reception' => 'a cikk beérkezésekor',
 			'when' => 'Jelöljön meg egy cikket olvasottként…',
+			'when_same_guid_in_category' => 'if an identical GUID already exists in the top <i>n</i> newest articles of the category',	// TODO
 			'when_same_title_in_category' => 'ha már létezik azonos cím a <i>n</i> kategória legfrissebb cikkeiben',
 			'when_same_title_in_feed' => 'ha egy azonos című cikk már létezik a legújabb <i>n</i> számú cikk között (a hírforrásban)',
 		),
@@ -291,11 +299,6 @@ return array(
 		),
 		'show_fav_unread_help' => 'A címkékre is vonatkozik',
 		'sides_close_article' => 'A cikk szövegrészén kívüli kattintás bezárja a cikket',
-		'sort' => array(
-			'_' => 'Rendezési sorrend',
-			'newer_first' => 'Újabb elöl',
-			'older_first' => 'Régebbi elöl',
-		),
 		'star' => array(
 			'when' => 'Cikk megjelölése kedvencnek…',
 		),
@@ -324,7 +327,7 @@ return array(
 		'share_name' => 'Megosztás neve',
 		'share_url' => 'URL megosztása a használathoz',
 		'title' => 'Sharing',	// IGNORE
-		'twitter' => 'Twitter',	// IGNORE
+		'twitter' => 'X (Twitter)',	// IGNORE
 		'wallabag' => 'wallabag',	// IGNORE
 	),
 	'shortcut' => array(
