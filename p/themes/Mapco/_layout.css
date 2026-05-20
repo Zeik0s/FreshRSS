@@ -252,7 +252,7 @@ main.prompt {
 	h1.title, h1 {
 		a {
 			color: var(--main-font-color);
-			font-family: "spectral", serif;
+			font-family: "spectral";
 			font-size: 2rem;
 
 			&:hover {
