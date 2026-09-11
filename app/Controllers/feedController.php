@@ -14,7 +14,6 @@ class FreshRSS_feed_Controller extends FreshRSS_ActionController {
 	public function firstAction(): void {
 		if (!FreshRSS_Auth::hasAccess()) {
 			$action = Minz_Request::actionName();
-			$allow_anonymous_refresh = FreshRSS_Context::systemConf()->allow_anonymous_refresh;
 
 			// Likely coming from bookmarklet, redirect to the login page
 			if ($action === 'add') {
@@ -22,7 +21,7 @@ class FreshRSS_feed_Controller extends FreshRSS_ActionController {
 				return;
 			}
 
-			if ($action !== 'actualize' || (!$allow_anonymous_refresh && !Minz_Request::tokenIsOk())) {
+			if ($action !== 'actualize' || (!FreshRSS_Auth::allowAnonymousRefresh() && !Minz_Request::tokenIsOk())) {
 				Minz_Error::error(403);
 			}
 		}
@@ -124,6 +123,7 @@ class FreshRSS_feed_Controller extends FreshRSS_ActionController {
 	 * GET request displays a form to add and configure a feed.
 	 * Request parameter is:
 	 *   - url_rss (default: false)
+	 *   - cat_id (default: 1)
 	 *
 	 * POST request adds a feed in database.
 	 * Parameters are:
@@ -199,7 +199,7 @@ class FreshRSS_feed_Controller extends FreshRSS_ActionController {
 			}
 			if ($max_redirs !== 0) {
 				$opts[CURLOPT_MAXREDIRS] = $max_redirs;
-				$opts[CURLOPT_FOLLOWLOCATION] = 1;
+				$opts[CURLOPT_FOLLOWLOCATION] = true;
 			}
 			if ($useragent !== '') {
 				$opts[CURLOPT_USERAGENT] = $useragent;
@@ -221,7 +221,7 @@ class FreshRSS_feed_Controller extends FreshRSS_ActionController {
 			}
 
 			$attributes = [
-				'curl_params' => empty($opts) ? null : $opts,
+				'curl_params' => empty($opts) ? null : FreshRSS_http_Util::sanitizeCurlParams($opts),
 			];
 			$attributes['ssl_verify'] = Minz_Request::paramTernary('ssl_verify');
 			$timeout = Minz_Request::paramInt('timeout');
@@ -1013,7 +1013,7 @@ class FreshRSS_feed_Controller extends FreshRSS_ActionController {
 			// Redirect to the main page with correct notification.
 			Minz_Request::good(
 				_t('feedback.sub.feed.actualized', $feed->name()),
-				['params' => ['get' => 'f_' . $id]],
+				['params' => ['get' => 'f_' . $id, 'id' => $id]],
 				notificationName: 'actualizeAction',
 				showNotification: FreshRSS_Context::userConf()->good_notification_timeout > 0);
 		} elseif ($nbUpdatedFeeds >= 1) {
@@ -1192,7 +1192,7 @@ class FreshRSS_feed_Controller extends FreshRSS_ActionController {
 
 		Minz_Request::good(
 			_t('feedback.sub.feed.cache_cleared', $feed->name()),
-			['params' => ['get' => 'f_' . $feed->id()]],
+			['params' => ['get' => 'f_' . $feed->id(), 'id' => $feed->id()]],
 			showNotification: FreshRSS_Context::userConf()->good_notification_timeout > 0
 		);
 	}
@@ -1258,7 +1258,7 @@ class FreshRSS_feed_Controller extends FreshRSS_ActionController {
 		//Give feedback to user.
 		Minz_Request::good(
 			_t('feedback.sub.feed.reloaded', $feed->name()),
-			['params' => ['get' => 'f_' . $feed->id()]],
+			['params' => ['get' => 'f_' . $feed->id(), 'id' => $feed->id()]],
 			showNotification: FreshRSS_Context::userConf()->good_notification_timeout > 0
 		);
 	}

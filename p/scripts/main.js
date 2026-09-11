@@ -88,7 +88,7 @@ function numberFormat(nStr) {
 	if (nStr < 0) {
 		return 0;
 	}
-	// http://www.mredkj.com/javascript/numberFormat.html
+	// https://www.mredkj.com/javascript/numberFormat.html
 	const x = String(nStr).split('.');
 	const x2 = x.length > 1 ? '.' + x[1] : '';
 	const rgx = /(\d+)(\d{3})/;
@@ -289,6 +289,13 @@ async function send_mark_read_queue(queue, asRead, callback) {
 			incUnreadsFeed(div, feed_id, inc);
 		}
 		delete pending_entries['flux_' + queue[i]];
+		// Let extensions know an entry finished being marked as read/unread
+		document.dispatchEvent(new CustomEvent('freshrss:entryStateChange', {
+			detail: {
+				id: queue[i],
+				isRead: !div.classList.contains('not_read'),
+			},
+		}));
 	}
 	faviconNbUnread();
 	if (json.tags) {
@@ -316,9 +323,7 @@ function send_mark_queue_tick(callback) {
 const delayedFunction = send_mark_queue_tick;
 
 function delayedClick(a) {
-	if (a) {
-		delayedFunction(function () { a.click(); });
-	}
+	delayedFunction(function () { a.click(); });
 }
 
 function mark_read(div, only_not_read, asBatch) {
@@ -439,8 +444,7 @@ function mark_favorite(div) {
 	}));
 }
 
-const freshrssOpenArticleEvent = document.createEvent('Event');
-freshrssOpenArticleEvent.initEvent('freshrss:openArticle', true, true);
+const freshrssOpenArticleEvent = new Event('freshrss:openArticle', { bubbles: true, cancelable: true });
 
 function loadLazyImages(rootElement) {
 	rootElement.querySelectorAll('img[data-original], iframe[data-original], video[data-original], track[data-original]').forEach(function (el) {
@@ -606,7 +610,7 @@ function next_unread_entry(skipping) {
 	toggleContent(new_active, old_active, skipping);
 }
 
-function prev_feed(jump_to_unread) {
+function prev_feed() {
 	let found = false;
 	let adjacent = null;
 	const feeds = document.querySelectorAll('#aside_feed .feed');
@@ -622,16 +626,14 @@ function prev_feed(jump_to_unread) {
 		if (getComputedStyle(feed).display === 'none') {
 			continue;
 		}
-		if (jump_to_unread && feed.dataset.unread != 0) {
-			delayedClick(feed.querySelector('a.item-title'));
-			return;
-		} else if (adjacent === null) {
+		if (adjacent === null) {
 			adjacent = feed;
 		}
 	}
 	if (found && adjacent) {
 		delayedClick(adjacent.querySelector('a.item-title'));
 	} else {
+		// if the current active item is a category, goes to the last feed of the category above
 		last_feed();
 	}
 }
@@ -662,25 +664,58 @@ function next_feed(jump_to_unread) {
 	if (found && adjacent) {
 		delayedClick(adjacent.querySelector('a.item-title'));
 	} else {
-		first_feed();
+		// if the current active feed is the last of the entire feed list, doesn't do anything
+		first_feed(jump_to_unread);
 	}
 }
 
-function first_feed() {
-	const a = document.querySelector('#aside_feed .category.active .feed:not([data-unread="0"]) a.item-title');
-	delayedClick(a);
+function first_feed(jump_to_unread, skip_if_last = true) {
+	let feed;
+	if (jump_to_unread) {
+		feed = document.querySelector('#aside_feed .category.active .feed:not([data-unread="0"])');
+	} else {
+		feed = document.querySelector('#aside_feed .category.active .feed');
+	}
+	while (getComputedStyle(feed).display === 'none') {
+		feed = feed.nextElementSibling;
+		if (!feed) {
+			return;
+		}
+	}
+	const categoryItems = feed.parentElement;
+	if (skip_if_last && categoryItems.querySelector('.feed.active') === categoryItems.lastElementChild) {
+		return;
+	}
+	const link = feed.querySelector('a.item-title');
+	delayedClick(link);
 }
 
 function last_feed() {
-	const links = document.querySelectorAll('#aside_feed .category.active .feed:not([data-unread="0"]) a.item-title');
-	if (links && links.length > 0) {
-		delayedClick(links[links.length - 1]);
+	let feed = document.querySelector('#aside_feed .category.active .feed:last-child');
+	if (feed.classList.contains('active')) {
+		const category = feed.closest('.category').previousElementSibling;
+		if (category) {
+			delayedClick(category);
+		}
+		return;
 	}
+	while (getComputedStyle(feed).display === 'none') {
+		feed = feed.previousElementSibling;
+		if (!feed) {
+			return;
+		}
+	}
+	const link = feed.querySelector('a.item-title');
+	delayedClick(link);
 }
 
 function prev_category() {
 	const active_cat = document.querySelector('#aside_feed .category.active');
 	if (active_cat) {
+		if (active_cat.querySelector('.feed.active')) {
+			delayedClick(active_cat.querySelector('a.tree-folder-title'));
+			return;
+		}
 		let cat = active_cat;
 		do cat = cat.previousElementSibling;
 		while (cat && getComputedStyle(cat).display === 'none');
@@ -714,6 +749,8 @@ function next_unread_category() {
 		while (cat && cat.getAttribute('data-unread') <= 0);
 		if (cat) {
 			delayedClick(cat.querySelector('a.tree-folder-title'));
+		} else if (active_cat.nextElementSibling) {
+			delayedClick(active_cat.nextElementSibling.querySelector('a.tree-folder-title'));
 		}
 	} else {
 		first_category();
@@ -721,15 +758,20 @@ function next_unread_category() {
 }
 
 function first_category() {
-	const a = document.querySelector('#aside_feed .category:not([data-unread="0"]) a.tree-folder-title');
+	// goes to main stream which is always visible
+	const a = document.querySelector('#aside_feed .category a.tree-folder-title');
 	delayedClick(a);
 }
 
 function last_category() {
-	const links = document.querySelectorAll('#aside_feed .category:not([data-unread="0"]) a.tree-folder-title');
-	if (links && links.length > 0) {
-		delayedClick(links[links.length - 1]);
+	let category = document.querySelector('#sidebar > :nth-last-child(2)');
+	while (getComputedStyle(category).display === 'none') {
+		category = category.previousElementSibling;
+		if (!category) {
+			return;
+		}
 	}
+	delayedClick(category.querySelector('a.tree-folder-title'));
 }
 
 function collapse_entry() {
@@ -798,7 +840,7 @@ async function show_labels_menu(el) {
 
 function show_share_menu(el) {
 	const div = el.parentElement;
-	const dropdownMenu = div.querySelector('.dropdown-menu');
+	const dropdownMenu = div.querySelector(':scope > .dropdown-menu');
 
 	if (!dropdownMenu) {
 		const itemId = el.closest('.flux').dataset.entry;
@@ -816,11 +858,11 @@ function show_share_menu(el) {
 		const title = title_el.textContent;
 		const titleText = title;
 		const template = document.getElementById(templateId).innerHTML
-			.replace(/--entryId--/g, id)
-			.replace(/--link--/g, link)
-			.replace(/--titleText--/g, titleText)
-			.replace(/--websiteName--/g, websiteName)
-			.replace(/--articleAuthors--/g, articleAuthorsText);
+			.replace(/--entryId--/g, encodeURIComponent(id))
+			.replace(/--link--/g, encodeURIComponent(link))
+			.replace(/--titleText--/g, encodeURIComponent(titleText))
+			.replace(/--websiteName--/g, encodeURIComponent(websiteName))
+			.replace(/--articleAuthors--/g, encodeURIComponent(articleAuthorsText));
 
 		div.insertAdjacentHTML('beforeend', template);
 	}
@@ -867,9 +909,10 @@ function auto_share(key) {
 	if (!share) {
 		return;
 	}
-	const shares = share.parentElement.querySelectorAll('.dropdown-menu .item [data-type]');
+	let shares;
 	if (typeof key === 'undefined') {
 		show_share_menu(share);
+		shares = share.parentElement.querySelectorAll('.dropdown-menu .item [data-type]');
 
 		// Display the share div
 		location.hash = share.id;
@@ -889,6 +932,7 @@ function auto_share(key) {
 			return;
 		}
 	}
+	shares = share.parentElement.querySelectorAll('.dropdown-menu .item [data-type]');
 	// Trigger selected share action and hide the share div
 	key = parseInt(key);
 	if (key <= shares.length) {
@@ -914,7 +958,7 @@ function onScroll() {
 		});
 	}
 	let streamFooter;
-	if (context.auto_load_more && (streamFooter = document.getElementById('stream-footer'))) {
+	if (context.auto_load_more && (streamFooter = document.querySelector('.stream-footer'))) {
 		if (box_to_follow.offsetHeight > 0 &&
 			box_to_follow.scrollTop + box_to_follow.offsetHeight + (window.innerHeight / 2) >= streamFooter.offsetTop) {
 			// Too close to the last pre-loaded article
@@ -950,7 +994,7 @@ function init_posts() {
 	}
 
 	if (!navigator.share && document.styleSheets.length > 0) {
-		// https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share
+		// https://developer.mozilla.org/docs/Web/API/Navigator/share
 		// do not show the menu entry if browser does not support navigator.share
 		document.styleSheets[0].insertRule(
 			'button.as-link[data-type="web-sharing-api"] {display: none !important;}',
@@ -1139,9 +1183,10 @@ function init_column_categories() {
 				const id = itemId.substr(2);
 				const feed_web = a.getAttribute('data-fweb') || '';
 				const template = document.getElementById(templateId)
-					.innerHTML.replace(/------/g, id).replace('http://example.net/', feed_web);
+					.innerHTML.replace(/------/g, id);
 				div.insertAdjacentHTML('beforeend', template);
 				dropdownMenu = div.querySelector('.dropdown-menu');
+				dropdownMenu.querySelector('li.website > a').href = feed_web;
 				dropdownMenu.style.opacity = '0%'; // Hide initially to prevent dropdown flashing
 				if (feed_web == '') {
 					const website = div.querySelector('.item.link.website');
@@ -1171,10 +1216,17 @@ function init_column_categories() {
 				// Wait for dropdown to be closed so it can be removed
 				// Dropdown visibility is based on CSS :target
 				window.addEventListener('hashchange', () => {
-					dropdownMenu?.nextElementSibling?.remove(); // dropdown close
-					dropdownMenu?.remove();
+					dropdownMenu.nextElementSibling.remove(); // .dropdown-close
+					dropdownMenu.remove();
 				}, { once: true });
 			}, { once: true });
+
+			if (location.hash === a.getAttribute('href')) {
+				// Forcefully trigger the hashchange event listener above in order to show the dropdown
+				// This is needed because the same hash remained from a previous page load
+				// or due to use of back/forward buttons
+				window.dispatchEvent(new Event('hashchange'));
+			}
 
 			return true;
 		}
@@ -1189,12 +1241,12 @@ function init_shortcuts() {
 	});
 
 	document.addEventListener('keydown', ev => {
-		if (ev.ctrlKey || ev.metaKey || (ev.altKey && ev.shiftKey) || ev.target.closest('input, select, textarea')) {
-			return;
-		}
-
 		const s = context.shortcuts;
 		let k = (ev.key.trim() || ev.code || 'Space').toUpperCase();
+
+		if ((ev.ctrlKey && k !== s.go_website) || ev.metaKey || (ev.altKey && ev.shiftKey) || ev.target.closest('input, select, textarea')) {
+			return;
+		}
 
 		// IE11
 		if (k === 'SPACEBAR') k = 'SPACE';
@@ -1255,7 +1307,7 @@ function init_shortcuts() {
 			if (ev.altKey) {
 				prev_category();
 			} else if (ev.shiftKey) {
-				prev_feed(false);
+				prev_feed();
 			} else {
 				prev_entry(false);
 			}
@@ -1277,7 +1329,7 @@ function init_shortcuts() {
 			if (ev.altKey) {
 				first_category();
 			} else if (ev.shiftKey) {
-				first_feed();
+				first_feed(false, false);
 			} else {
 				const old_active = document.querySelector('.flux.current');
 				const first = document.querySelector('.flux');
@@ -1308,14 +1360,6 @@ function init_shortcuts() {
 			return;
 		}
 
-		if (ev.altKey || ev.shiftKey) {
-			return;
-		}
-		if (k === s.mark_favorite) {	// Toggle the favorite state
-			mark_favorite(document.querySelector('.flux.current'));
-			ev.preventDefault();
-			return;
-		}
 		if (k === s.go_website) {
 			if (context.auto_mark_site) {
 				mark_read(document.querySelector('.flux.current'), true, false);
@@ -1326,6 +1370,15 @@ function init_shortcuts() {
 				window.open(link_go_website.href, '_blank', 'noopener');
 				ev.preventDefault();
 			}
+			return;
+		}
+
+		if (ev.altKey || ev.shiftKey) {
+			return;
+		}
+		if (k === s.mark_favorite) {	// Toggle the favorite state
+			mark_favorite(document.querySelector('.flux.current'));
+			ev.preventDefault();
 			return;
 		}
 		const hash = location.hash.substr(1);
@@ -1497,7 +1550,7 @@ function init_stream(stream) {
 		}
 
 		el = ev.target.closest('.item.share > button[data-type="web-sharing-api"]');
-		if (el && navigator.share) {	// https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share
+		if (el && navigator.share) {	// https://developer.mozilla.org/docs/Web/API/Navigator/share
 			const shareData = {
 				url: el.dataset.url,
 				title: decodeURI(el.dataset.title),
@@ -1906,7 +1959,9 @@ function init_actualize() {
 		context.ajax_loading = true;
 
 		const req = new XMLHttpRequest();
-		req.open('POST', './?c=javascript&a=actualize', true);
+		const currentGet = new URLSearchParams(window.location.search).get('get');
+		const scope = currentGet ? '&get=' + encodeURIComponent(currentGet) : '';
+		req.open('POST', './?c=javascript&a=actualize' + scope, true);
 		req.responseType = 'json';
 		req.onload = function (e) {
 			if (this.status != 200) {
@@ -2036,7 +2091,7 @@ async function notifs_html5_ask_permission() {
 	}
 }
 
-function notifs_html5_show(nb, nb_new) {
+function notifs_html5_show(body) {
 	if (!context.html5_enable_notif) {
 		return;	// from config
 	}
@@ -2047,7 +2102,7 @@ function notifs_html5_show(nb, nb_new) {
 	try {
 		const notification = new window.Notification(context.i18n.notif_title_articles, {
 			icon: '../themes/icons/favicon-256-padding.png',
-			body: context.i18n.notif_body_new_articles.replace('%%d', nb_new) + ' ' + context.i18n.notif_body_unread_articles.replace('%%d', nb),
+			body: body,
 			tag: 'freshRssNewArticles',
 		});
 
@@ -2086,19 +2141,19 @@ function init_notifs_html5() {
 // </notifs html5>
 
 function refreshUnreads() {
+	const title = document.querySelector('.category.all .title');
+	const nb_unreads_before = title ? str2int(title.getAttribute('data-unread')) : 0;
 	const req = new XMLHttpRequest();
-	req.open('GET', './?c=javascript&a=nbUnreadsPerFeed', true);
+	req.open('GET', './?c=javascript&a=nbUnreadsPerFeed&previous_unread=' + encodeURIComponent(nb_unreads_before), true);
 	req.responseType = 'json';
 	req.onload = function (e) {
 		const json = xmlHttpRequestJson(this);
 		if (!json) {
-			return badAjax(false);
+			return badAjax(this.status >= 400 && this.status <= 499);
 		}
 		const isAll = document.querySelector('.category.all.active');
 		let new_articles = false;
 		let nbUnreadFeeds = 0;
-		const title = document.querySelector('.category.all .title');
-		const nb_unreads_before = title ? str2int(title.getAttribute('data-unread')) : 0;
 
 		Object.keys(json.feeds).forEach(function (feed_id) {
 			const nbUnreads = json.feeds[feed_id];
@@ -2141,10 +2196,9 @@ function refreshUnreads() {
 
 		const nb_unreads = title ? str2int(title.getAttribute('data-unread')) : 0;
 
+		faviconNbUnread(nb_unreads);
 		if (nb_unreads > 0 && new_articles) {
-			faviconNbUnread(nb_unreads);
-			const nb_new = nb_unreads - nb_unreads_before;
-			notifs_html5_show(nb_unreads, nb_new);
+			notifs_html5_show(json.notifBody);
 		}
 	};
 	req.send();
@@ -2195,7 +2249,7 @@ function load_more_posts() {
 		}
 
 		const html = this.response;
-		const streamFooter = document.getElementById('stream-footer');
+		const streamFooter = document.querySelector('.stream-footer');
 		const transitions = document.querySelectorAll('#stream > .transition');
 		let lastTransition = transitions.length > 0 ? transitions[transitions.length - 1] : null;
 
@@ -2216,7 +2270,7 @@ function load_more_posts() {
 		}
 
 		const bigMarkAsRead = document.getElementById('bigMarkAsRead');
-		const readAll = document.querySelector('#nav_menu_read_all .read_all');
+		const readAll = document.querySelector('.nav_menu_read_all .read_all');
 		if (readAll && bigMarkAsRead && bigMarkAsRead.formAction) {
 			if (context.display_order === 'ASC') {
 				readAll.formAction = bigMarkAsRead.formAction;
@@ -2241,8 +2295,7 @@ function load_more_posts() {
 	req.send();
 }
 
-const freshrssLoadMoreEvent = document.createEvent('Event');
-freshrssLoadMoreEvent.initEvent('freshrss:load-more', true, true);
+const freshrssLoadMoreEvent = new Event('freshrss:load-more', { bubbles: true, cancelable: true });
 
 function init_load_more(box) {
 	box_load_more = box;
@@ -2298,11 +2351,12 @@ function faviconNbUnread(n) {
 		return;
 	}
 	const svgBase = dynamicFaviconBase.innerHTML;
-	const link = document.getElementById('favicon')?.cloneNode(true);
+	const favicon = document.getElementById('favicon');
+	const link = favicon?.cloneNode(true);
 	if (link) {
 		let svgOutput = '';
 		if (n > 0) {
-			let text = '';
+			let text;
 			if (n < 1000) {
 				text = n;
 			} else if (n < 100000) {
@@ -2334,8 +2388,7 @@ function faviconNbUnread(n) {
 			temp.remove();
 		}
 		link.href = `data:image/svg+xml;base64,${btoa(svgOutput || svgBase)}`;
-		document.querySelector('#favicon').remove();
-		document.head.appendChild(link);
+		favicon.replaceWith(link);
 	}
 }
 
@@ -2455,7 +2508,7 @@ function init_navigation_handler() {
 	if (!('navigation' in window)) {
 		return;
 	}
-	navigation.addEventListener('navigate', (e) => {
+	window.navigation.addEventListener('navigate', (e) => {
 		if (!(e.canIntercept && e.hashChange && e.navigationType === 'traverse')) {
 			return;
 		}

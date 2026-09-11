@@ -224,7 +224,7 @@ class FreshRSS_Category extends Minz_Model {
 		} else {
 			$dryRunCategory = new FreshRSS_Category();
 			$importService = new FreshRSS_Import_Service();
-			$importService->importOpml($opml, $dryRunCategory, true);
+			$importService->importOpml($opml, $dryRunCategory, dry_run: true, trusted_source: false);
 			if ($importService->lastStatus()) {
 				$feedDAO = FreshRSS_Factory::createFeedDao();
 				$limits = FreshRSS_Context::systemConf()->limits;
@@ -299,7 +299,7 @@ class FreshRSS_Category extends Minz_Model {
 		if ($this->feeds === null) {
 			return;
 		}
-		uasort($this->feeds, static fn(FreshRSS_Feed $a, FreshRSS_Feed $b) => strnatcasecmp($a->name(), $b->name()));
+		uasort($this->feeds, static fn(FreshRSS_Feed $a, FreshRSS_Feed $b): int => FreshRSS_Context::localeCompare($a->name(), $b->name()));
 	}
 
 	/**

@@ -7,6 +7,13 @@ require_once LIB_PATH . '/lib_date.php';
 
 final class SearchTest extends \PHPUnit\Framework\TestCase {
 
+	public function __construct(string $name) {
+		parent::__construct($name);
+		if (!FreshRSS_Context::hasSystemConf()) {
+			FreshRSS_Context::initSystem();
+		}
+	}
+
 	#[DataProvider('provideEmptyInput')]
 	public static function test__construct_whenInputIsEmpty_getsOnlyNullValues(string $input): void {
 		$search = new FreshRSS_Search($input);
@@ -1007,8 +1014,18 @@ final class SearchTest extends \PHPUnit\Framework\TestCase {
 			],
 			[
 				'intext:/^ab$/m',
-				'(UNCOMPRESS(e.content_bin) REGEXP ?))',
+				'(UNCOMPRESS(e.content_bin) REGEXP ?)',
 				['(?-i)(?m)^ab$']
+			],
+			[
+				'-intext:/^ab$/m',
+				'(NOT UNCOMPRESS(e.content_bin) REGEXP ?)',
+				['(?-i)(?m)^ab$']
+			],
+			[
+				'-/^ab$/',
+				'(NOT e.title REGEXP ? AND NOT UNCOMPRESS(e.content_bin) REGEXP ?)',
+				['(?-i)^ab$', '(?-i)^ab$']
 			],
 		];
 	}
@@ -1045,8 +1062,18 @@ final class SearchTest extends \PHPUnit\Framework\TestCase {
 			],
 			[
 				'intext:/^ab$/m',
-				"(REGEXP_LIKE(UNCOMPRESS(e.content_bin),?,'mc')))",
+				"(REGEXP_LIKE(UNCOMPRESS(e.content_bin),?,'mc'))",
 				['^ab$']
+			],
+			[
+				'-intext:/^ab$/m',
+				"(NOT REGEXP_LIKE(UNCOMPRESS(e.content_bin),?,'mc'))",
+				['^ab$']
+			],
+			[
+				'-/^ab$/',
+				"(NOT REGEXP_LIKE(e.title,?,'c') AND NOT REGEXP_LIKE(UNCOMPRESS(e.content_bin),?,'c'))",
+				['^ab$', '^ab$']
 			],
 		];
 	}

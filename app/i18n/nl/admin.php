@@ -91,8 +91,13 @@ return array(
 		'default_closed_registration_message' => 'Deze server accepteert momenteel geen nieuwe registraties.',
 		'force_email_validation' => 'Emailadresvalidatie forceren',
 		'instance-name' => 'Voorbeeld naam',
+		'internal-host-allowlist' => array(
+			'_' => 'Internal host allowlist',	// TODO
+			'help' => 'One entry per line:<ul><li>A <code>host:port</code>. For instance <code>127.0.0.1:8080</code> or <code>rss-bridge:80</code></li><li>A CIDR notation. For instance <code>0.0.0.0/0</code> to allow any IPv4, <code>::/0</code> to allow any IPv6</li><li>A <code>*</code> to allow any host (unsafe)</li></ul>',	// TODO
+		),
 		'max-categories' => 'Categorielimiet per gebruiker',
 		'max-feeds' => 'Feedlimiet per gebruiker',
+		'override-by-env-var' => 'This setting is set by the environment variable <kbd>%s</kbd>.',	// TODO
 		'registration' => array(
 			'number' => 'Maximum aantal accounts',
 			'select' => array(
@@ -132,7 +137,7 @@ return array(
 		'releaseChannel' => array(
 			'_' => 'Release-kanaal',
 			'edge' => 'Rollende release (“edge”)',
-			'latest' => 'Stabiele release (“latest”)',
+			'latest' => 'Stabiele release (“latest”)',	// DIRTY
 		),
 		'title' => 'Vernieuw systeem',
 		'viaGit' => 'Update via git and GitHub.com gestart',

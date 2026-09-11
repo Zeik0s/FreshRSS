@@ -106,12 +106,8 @@ class FreshRSS_Feed extends Minz_Model {
 	}
 
 	public function proxyParam(): string {
-		$curl_params = $this->attributeArray('curl_params');
-		if (is_array($curl_params)) {
-			// Content provided through a proxy may be completely different
-			return is_string($curl_params[CURLOPT_PROXY] ?? null) ? $curl_params[CURLOPT_PROXY] : '';
-		}
-		return '';
+		$curl_params = FreshRSS_http_Util::sanitizeCurlParams($this->attributeArray('curl_params') ?? []);
+		return is_string($curl_params[CURLOPT_PROXY] ?? null) ? $curl_params[CURLOPT_PROXY] : '';
 	}
 
 	/**
@@ -686,7 +682,9 @@ class FreshRSS_Feed extends Minz_Model {
 					$this->_attribute('SimplePieHash', $simplePie->get_hash());
 					return $simplePie;
 				}
-				syslog(LOG_DEBUG, 'FreshRSS SimplePie uses cache for ' . $clean_url);
+				if (FreshRSS_Context::systemConf()->simplepie_syslog_enabled) {
+					syslog(LOG_DEBUG, 'FreshRSS SimplePie uses cache for ' . $clean_url);
+				}
 			}
 		}
 		return null;
@@ -843,15 +841,18 @@ class FreshRSS_Feed extends Minz_Model {
 			$content = html_only_entity_decode($item->get_content());
 
 			$attributeThumbnail = $item->get_thumbnail() ?? [];
-			if (empty($attributeThumbnail['url'])) {
+			if (empty($attributeThumbnail['url']) || !is_string($attributeThumbnail['url']) ||
+				!\SimplePie\Misc::is_remote_uri($attributeThumbnail['url'])) {
 				$attributeThumbnail['url'] = '';
 			}
 
 			$attributeEnclosures = [];
-			if (!empty($item->get_enclosures())) {
-				foreach ($item->get_enclosures() as $enclosure) {
+			// Keep only one representation per `<media:group>` (the `isDefault` one, or the first one)
+			$enclosures = $item->get_enclosures(excludeMediaGroupAlternatives: true);
+			if (!empty($enclosures)) {
+				foreach ($enclosures as $enclosure) {
 					$elink = $enclosure->get_link();
-					if ($elink != '') {
+					if (is_string($elink) && $elink !== '' && \SimplePie\Misc::is_remote_uri($elink)) {
 						$etitle = $enclosure->get_title() ?? '';
 						$credits = $enclosure->get_credits() ?? null;
 						$description = $enclosure->get_description() ?? '';
@@ -894,7 +895,8 @@ class FreshRSS_Feed extends Minz_Model {
 
 						if (!empty($enclosure->get_thumbnails())) {
 							foreach ($enclosure->get_thumbnails() as $thumbnail) {
-								if ($thumbnail !== $attributeThumbnail['url']) {
+								if (is_string($thumbnail) && \SimplePie\Misc::is_remote_uri($thumbnail) &&
+									$thumbnail !== $attributeThumbnail['url']) {
 									$attributeEnclosure['thumbnails'][] = $thumbnail;
 								}
 							}
@@ -1302,6 +1304,7 @@ class FreshRSS_Feed extends Minz_Model {
 		$filename = $simplePie->get_cache_filename($url);
 		switch ($this->kind) {
 			case FreshRSS_Feed::KIND_HTML_XPATH:
+			case FreshRSS_Feed::KIND_HTML_XPATH_JSON_DOTNOTATION:
 				return CACHE_PATH . '/' . $filename . '.html';
 			case FreshRSS_Feed::KIND_XML_XPATH:
 				return CACHE_PATH . '/' . $filename . '.xml';
@@ -1311,8 +1314,9 @@ class FreshRSS_Feed extends Minz_Model {
 				return CACHE_PATH . '/' . $filename . '.json';
 			case FreshRSS_Feed::KIND_RSS:
 			case FreshRSS_Feed::KIND_RSS_FORCED:
-			default:
 				return CACHE_PATH . '/' . $filename . '.spc';
+			default:
+				return CACHE_PATH . '/' . $filename . '.raw';
 		}
 	}
 
@@ -1467,56 +1471,21 @@ class FreshRSS_Feed extends Minz_Model {
 				$hubJson['lease_end'] = time() - 60;
 				file_put_contents($hubFilename, json_encode($hubJson));
 			}
-			$ch = curl_init();
-			if ($ch === false) {
-				Minz_Log::warning('curl_init() failed in ' . __METHOD__);
-				return false;
-			}
-			curl_setopt_array($ch, [
-				CURLOPT_URL => $hubJson['hub'],
-				CURLOPT_RETURNTRANSFER => true,
+			$response = FreshRSS_http_Util::httpGet($hubJson['hub'], null, 'html', [], [
 				CURLOPT_POSTFIELDS => http_build_query([
 					'hub.verify' => 'sync',
 					'hub.mode' => $state ? 'subscribe' : 'unsubscribe',
 					'hub.topic' => $url,
 					'hub.callback' => $callbackUrl,
 				]),
-				CURLOPT_USERAGENT => FRESHRSS_USERAGENT,
 				CURLOPT_MAXREDIRS => 10,
-				CURLOPT_FOLLOWLOCATION => true,
-				CURLOPT_ACCEPT_ENCODING => '',	//Enable all encodings
-				//CURLOPT_VERBOSE => 1,	// To debug sent HTTP headers
 			]);
-
-			$curl_options = [];
-			if (defined('CURLOPT_PROTOCOLS_STR') && is_int(CURLOPT_PROTOCOLS_STR)) {
-				$curl_options[CURLOPT_PROTOCOLS_STR] = 'http,https';
-				if (defined('CURLOPT_REDIR_PROTOCOLS_STR') && is_int(CURLOPT_REDIR_PROTOCOLS_STR)) {
-					$curl_options[CURLOPT_REDIR_PROTOCOLS_STR] = 'http,https';
-				}
-			} elseif (defined('CURLPROTO_HTTP') && defined('CURLPROTO_HTTPS')) {
-				// Legacy PHP 8.2-
-				if (defined('CURLOPT_PROTOCOLS')) {
-					$curl_options[CURLOPT_PROTOCOLS] = CURLPROTO_HTTP | CURLPROTO_HTTPS;
-				}
-				if (defined('CURLOPT_REDIR_PROTOCOLS')) {
-					$curl_options[CURLOPT_REDIR_PROTOCOLS] = CURLPROTO_HTTP | CURLPROTO_HTTPS;
-				}
-			}
-			curl_setopt_array($ch, $curl_options);
-
-			$response = curl_exec($ch);
-			$info = curl_getinfo($ch);
-			if (!is_array($info)) {
-				Minz_Log::warning('curl_getinfo() failed in ' . __METHOD__);
-				return false;
-			}
 
 			Minz_Log::warning('WebSub ' . ($state ? 'subscribe' : 'unsubscribe') . ' to ' . $url .
 				' via hub ' . $hubJson['hub'] .
-				' with callback ' . $callbackUrl . ': ' . $info['http_code'] . ' ' . $response, PSHB_LOG);
+				' with callback ' . $callbackUrl . ': ' . $response['status'] . ' ' . $response['body'], PSHB_LOG);
 
-			if (str_starts_with('' . $info['http_code'], '2')) {
+			if (str_starts_with('' . $response['status'], '2')) {
 				return true;
 			} else {
 				$hubJson['lease_start'] = time();	//Prevent trying again too soon

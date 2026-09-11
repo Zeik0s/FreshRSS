@@ -64,6 +64,12 @@ html, body {
 	font-size: 100%;
 }
 
+html:lang(ja) body {
+	font-family: "OpenSans", "Cantarell", "Helvetica", "Arial",
+		"Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo",
+		"Osaka", "Noto Sans CJK JP", "Noto Sans JP", sans-serif;
+}
+
 button, input, select, textarea {
 	font-family: inherit;
 }
@@ -194,13 +200,17 @@ p#favicon-ext {
 	text-decoration: underline;
 }
 
-p.help, .prompt p.help {
+.help, .prompt .help {
 	margin: 0.25rem 0 0.5rem;
 	text-align: left;
 }
 
-p.help .icon {
+.help .icon {
 	filter: brightness(2);
+}
+
+.help > ul {
+	padding-left: 1rem;
 }
 
 kbd {
@@ -288,7 +298,7 @@ label > span[title] {
 	text-decoration: underline dotted;
 }
 
-input:not(.w50,.w100) {
+input:not(.w20,.w50,.w100) {
 	max-width: 90%;
 	width: 300px;
 }
@@ -323,6 +333,13 @@ select {
 textarea.h50 {
 	height: 50vh;
 	min-height: 7rem;
+}
+
+input.w20,
+select.w20,
+textarea.w20 {
+	min-width: 20%;
+	box-sizing: border-box;
 }
 
 input.w50,
@@ -363,7 +380,7 @@ textarea[rows="2"] {
 	height: 4em;
 }
 
-textarea:invalid {
+textarea:user-invalid {
 	border: 2px dashed var(--frss-border-color-error);
 }
 
@@ -376,6 +393,7 @@ textarea:invalid {
 }
 
 input:disabled,
+textarea:disabled,
 select:disabled {
 	background-color: transparent;
 	min-width: 75px;
@@ -397,7 +415,7 @@ input[type="checkbox"] {
 }
 
 .dropdown-menu .item > a:hover,
-.dropdown-menu .item > button:hover {
+.dropdown-menu .item button:hover {
 	text-decoration: none;
 }
 
@@ -537,7 +555,7 @@ td.numeric {
 }
 
 @supports (position: sticky) {
-	#mark-read-aside {
+	.mark-read-aside {
 		position: sticky;
 		top: 0;
 	}
@@ -559,12 +577,12 @@ input.ignore-auto-complete {
 }
 
 /*=== Buttons */
-button[disabled] {
+button:disabled {
 	opacity: 0.5;
 	color: var(--frss-font-color-disabled);
 }
 
-button[disabled]:hover, input[disabled]:hover {
+button:disabled:hover, textarea:disabled:hover, input:disabled:hover {
 	cursor: not-allowed;
 }
 
@@ -590,7 +608,7 @@ button[disabled]:hover, input[disabled]:hover {
 	flex-shrink: 0;
 }
 
-#nav_menu_read_all form {
+.nav_menu_read_all form {
 	display: inline-flex;
 }
 
@@ -738,7 +756,7 @@ input[type="checkbox"]:focus-visible {
 
 .nav-list .item,
 .nav-list .item > a,
-.nav-list .item > .as-link,
+.nav-list .item .as-link,
 .nav-list .item > span {
 	display: block;
 	overflow: hidden;
@@ -859,7 +877,7 @@ input[type="checkbox"]:focus-visible {
 }
 
 .dropdown-menu .item > a,
-.dropdown-menu .item > .as-link,
+.dropdown-menu .item .as-link,
 .dropdown-menu .item > span {
 	display: block;
 	width: 100%;
@@ -925,6 +943,10 @@ input[type="checkbox"]:focus-visible {
 	background: inherit;
 }
 
+.alert-info {
+	background: inherit;
+}
+
 .group-controls .alert {
 	width: 100%
 }
@@ -958,7 +980,7 @@ input[type="checkbox"]:focus-visible {
 }
 
 /* === stream-footer **/
-#stream-footer {
+.stream-footer {
 	margin: 0 0 5em;
 	padding: 1em 0;
 	width: 100%;
@@ -1411,7 +1433,7 @@ input[type="search"] {
 	width: 2.25rem;
 }
 
-.aside_feed .tree-folder-items .item .dropdown-target:target ~ .dropdown-toggle > .icon,
+.aside_feed .tree-folder-items .item .dropdown:has(.dropdown-menu) .dropdown-target:target ~ .dropdown-toggle > .icon,
 .aside_feed .tree-folder-items .item:hover .dropdown-toggle > .icon,
 .aside_feed .tree-folder-items .item.active .dropdown-toggle > .icon {
 	visibility: visible;
@@ -1505,11 +1527,6 @@ a.website:hover .favicon {
 	font-weight: bold;
 }
 
-.flux:not(.current):hover .flux_header.has-date .item .title {
-	grid-column: 1 / -1;
-	z-index: 2;
-}
-
 .flux:not(.current):hover .item .title {
 	background-color: inherit;
 }
@@ -1570,6 +1587,7 @@ a.website:hover .favicon {
 	grid-template-columns: minmax(0, 1fr) auto;
 	grid-template-areas: "title date"
 		"summary .";
+	column-gap: 0.5rem;
 	align-content: center;
 }
 
@@ -2735,15 +2753,15 @@ html.slider-active {
 		box-shadow: -3px 0 3px var(--frss-box-shadow-color-transparent);
 	}
 
-	#nav_menu_read_all .dropdown-target ~ .dropdown-toggle .icon {
+	.nav_menu_read_all .dropdown-target ~ .dropdown-toggle .icon {
 		display: none;
 	}
 
-	#nav_menu_read_all .dropdown-target ~ .dropdown-toggle::before {
+	.nav_menu_read_all .dropdown-target ~ .dropdown-toggle::before {
 		content: '✓';
 	}
 
-	#nav_menu_read_all .read_all.btn {
+	.nav_menu_read_all .read_all.btn {
 		display: none;
 	}
 
@@ -2896,7 +2914,7 @@ html.slider-active {
 
 	@page {
 		/* Firefox and Safari do not support those yet */
-		/* See: https://developer.mozilla.org/en-US/docs/Web/CSS/@page#browser_compatibility */
+		/* See: https://developer.mozilla.org/docs/Web/CSS/@page#browser_compatibility */
 
 		@top-left { content: ''; }
 
